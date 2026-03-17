@@ -1,0 +1,11 @@
+[project]
+name = "TravelVloggers"
+version = "0.1.0"
+description = "Backend API that aggregates travel-related video content posted on YouTube"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[standard]>=0.135.1",
+    "ruff>=0.15.6",
+    "sqlalchemy>=2.0.48",
+]
