@@ -1,0 +1,28 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    develop:
+      watch:
+        - action : sync
+          path: .
+          target: /app
+          ignore:
+            - .venv/
+        - action: rebuild
+          path: pyproject.toml
+    depends_on:
+      - db
+  db:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:
