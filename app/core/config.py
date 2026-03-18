@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 
@@ -16,6 +17,8 @@ class Settings(BaseSettings):
 
     POSTGRES_DB_TEST: str = "db_test"
     DATABASE_TEST_URL: str | None = None
+
+    SUPERUSER_EMAIL: str | None = None
 
 
 settings = Settings()  # type: ignore[call-arg]
