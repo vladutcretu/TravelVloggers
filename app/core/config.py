@@ -14,5 +14,8 @@ class Settings(BaseSettings):
     POSTGRES_DB: str = "db"
     DATABASE_URL: str | None = None
 
+    POSTGRES_DB_TEST: str = "db_test"
+    DATABASE_TEST_URL: str | None = None
+
 
 settings = Settings()  # type: ignore[call-arg]
