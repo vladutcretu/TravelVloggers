@@ -1,8 +1,13 @@
+import jwt
+
 from fastapi import status
 
 from app.core.config import settings
+from app.models.user import User
+from app.core.security import hash_password
 
 
+# Endpoint /api/v1/auth/register
 async def test_register_endpoint_success(client):
     response = await client.post(
         "/api/v1/auth/register", json={"email": "test@mail.com", "password": "123456"}
@@ -48,3 +53,101 @@ async def test_register_endpoint_short_password(client):
     )
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+async def test_register_endpoint_missing_fields(client):
+    response = await client.post(
+        "/api/v1/auth/register", json={"email": "test@mail.com"}
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+async def test_register_endpoint_email_format(client):
+    response = await client.post(
+        "/api/v1/auth/register", json={"email": "invalid-email", "password": "123456"}
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+# Endpoint /api/v1/auth/login
+async def test_login_endpoint_success(client, db_session):
+    user = User(email="test@mail.com", password_hash=hash_password("123456"))
+    db_session.add(user)
+    await db_session.commit()
+
+    response = await client.post(
+        "/api/v1/auth/login", json={"email": "test@mail.com", "password": "123456"}
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert "access_token" in data
+    assert data["access_token"].startswith("ey")
+    assert data["token_type"] == "bearer"
+
+
+async def test_login_endpoint_email_incorrect(client, db_session):
+    user = User(email="test@mail.com", password_hash=hash_password("123456"))
+    db_session.add(user)
+    await db_session.commit()
+
+    response = await client.post(
+        "/api/v1/auth/login", json={"email": "not_found@mail.com", "password": "123456"}
+    )
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json()["detail"] == "Email or password are incorrect"
+
+
+async def test_login_endpoint_password_incorrect(client, db_session):
+    user = User(email="test@mail.com", password_hash=hash_password("123456"))
+    db_session.add(user)
+    await db_session.commit()
+
+    response = await client.post(
+        "/api/v1/auth/login", json={"email": "test@mail.com", "password": "wrong_pass"}
+    )
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json()["detail"] == "Email or password are incorrect"
+
+
+async def test_login_endpoint_missing_fields(client):
+    response = await client.post(
+        "/api/v1/auth/login", json={"email": "test@mail.com"}
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+async def test_login_endpoint_email_format(client):
+    response = await client.post(
+        "/api/v1/auth/login", json={"email": "invalid-email", "password": "123456"}
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+async def test_login_token_payload(client, db_session):
+    user = User(email="test@mail.com", password_hash=hash_password("123456"))
+    db_session.add(user)
+    await db_session.commit()
+
+    response = await client.post(
+        "/api/v1/auth/login", json={"email": "test@mail.com", "password": "123456"}
+    )
+
+    token = response.json()["access_token"]
+
+    payload = jwt.decode(
+        jwt=token,
+        key=settings.access_token_secret_key.get_secret_value(),
+        algorithms=[settings.access_token_algorithm],
+    )
+
+    assert "exp" in payload
+    assert payload["sub"] == str(user.id)
+    assert payload["type"] == "access"
