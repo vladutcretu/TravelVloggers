@@ -3,10 +3,19 @@ from typing import Annotated
 from fastapi import APIRouter, status, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.schemas.user import UserCreateResponse, UserCreate
+from app.schemas.user import (
+    UserCreateResponse,
+    UserCreate,
+    UserLogin,
+    UserLoginResponse,
+)
 from app.db.connection import get_db
 from app.repositories.auth import AuthRepository
-from app.services.auth import AuthService, EmailAlreadyExistsError
+from app.services.auth import (
+    AuthService,
+    EmailAlreadyExistsError,
+    EmailOrPasswordIncorrectError,
+)
 
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -31,3 +40,20 @@ async def register(user_data: UserCreate, db: Annotated[AsyncSession, Depends(ge
         )
 
     return user
+
+
+@router.post("/login", response_model=UserLoginResponse, status_code=status.HTTP_200_OK)
+async def login(user_data: UserLogin, db: Annotated[AsyncSession, Depends(get_db)]):
+    repository = AuthRepository(db)
+    service = AuthService(repository)
+
+    try:
+        access_token = await service.login_user(user_data.email, user_data.password)
+    except EmailOrPasswordIncorrectError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email or password are incorrect",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    return UserLoginResponse(access_token=access_token, token_type="bearer")

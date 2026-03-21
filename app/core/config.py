@@ -1,5 +1,7 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import SecretStr
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -19,6 +21,10 @@ class Settings(BaseSettings):
     DATABASE_TEST_URL: str | None = None
 
     SUPERUSER_EMAIL: str | None = None
+
+    access_token_expire_minutes: int = 30
+    access_token_secret_key: SecretStr
+    access_token_algorithm: str = "HS256"
 
 
 settings = Settings()  # type: ignore[call-arg]

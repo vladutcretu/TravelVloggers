@@ -15,3 +15,12 @@ class UserCreateResponse(BaseModel):
     id: int
     email: EmailStr
     is_superuser: bool = Field(default=False)
+
+
+class UserLogin(UserCreate):
+    pass
+
+
+class UserLoginResponse(BaseModel):
+    access_token: str
+    token_type: str
