@@ -1,15 +1,13 @@
-from typing import Annotated
-
-from fastapi import APIRouter, status, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, status, HTTPException
 
 from app.schemas.user import (
     UserCreateResponse,
     UserCreate,
     UserLogin,
     UserLoginResponse,
+    UserPrivateResponse,
 )
-from app.db.connection import get_db
+from app.api.dependencies import DatabaseSession, CurrentUser
 from app.repositories.auth import AuthRepository
 from app.services.auth import (
     AuthService,
@@ -27,7 +25,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
     response_model_exclude_defaults=True,
     status_code=status.HTTP_201_CREATED,
 )
-async def register(user_data: UserCreate, db: Annotated[AsyncSession, Depends(get_db)]):
+async def register(user_data: UserCreate, db: DatabaseSession):
     repository = AuthRepository(db)
     service = AuthService(repository)
 
@@ -43,7 +41,7 @@ async def register(user_data: UserCreate, db: Annotated[AsyncSession, Depends(ge
 
 
 @router.post("/login", response_model=UserLoginResponse, status_code=status.HTTP_200_OK)
-async def login(user_data: UserLogin, db: Annotated[AsyncSession, Depends(get_db)]):
+async def login(user_data: UserLogin, db: DatabaseSession):
     repository = AuthRepository(db)
     service = AuthService(repository)
 
@@ -57,3 +55,8 @@ async def login(user_data: UserLogin, db: Annotated[AsyncSession, Depends(get_db
         )
 
     return UserLoginResponse(access_token=access_token, token_type="bearer")
+
+
+@router.get("/me", response_model=UserPrivateResponse, status_code=status.HTTP_200_OK)
+async def get_me(current_user: CurrentUser):
+    return current_user
