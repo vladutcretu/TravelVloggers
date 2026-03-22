@@ -43,7 +43,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     return encoded_jwt
 
 
-def verify_access_token(token: str) -> str | None:
+def verify_access_token(token: str) -> int | None:
     """
     Verify a JWT access token (exp) and return the sub (user id) if it's valid.
     """
@@ -63,4 +63,4 @@ def verify_access_token(token: str) -> str | None:
         if sub is None or token_type != "access":
             return None
 
-        return str(sub)
+        return int(sub)
