@@ -116,9 +116,7 @@ async def test_login_endpoint_password_incorrect(client, db_session):
 
 
 async def test_login_endpoint_missing_fields(client):
-    response = await client.post(
-        "/api/v1/auth/login", json={"email": "test@mail.com"}
-    )
+    response = await client.post("/api/v1/auth/login", json={"email": "test@mail.com"})
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
@@ -151,3 +149,67 @@ async def test_login_token_payload(client, db_session):
     assert "exp" in payload
     assert payload["sub"] == str(user.id)
     assert payload["type"] == "access"
+
+
+# Endpoint /api/v1/auth/me
+async def test_me_endpoint_success(client, db_session):
+    user = User(email="test@mail.com", password_hash=hash_password("123456"))
+    db_session.add(user)
+    await db_session.commit()
+
+    response = await client.post(
+        "/api/v1/auth/login", json={"email": "test@mail.com", "password": "123456"}
+    )
+
+    token = response.json()["access_token"]
+
+    response = await client.get(
+        "/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert "id" in data
+    assert data["email"] == "test@mail.com"
+    assert type(data["is_admin"]) is bool
+    assert type(data["is_superuser"]) is bool
+
+
+async def test_me_endpoint_without_token(client):
+    response = await client.get("/api/v1/auth/me")
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json()["detail"] == "Not authenticated"
+
+
+async def test_me_endpoint_with_invalid_token(client, db_session):
+    response = await client.get(
+        "/api/v1/auth/me", headers={"Authorization": "Bearer invalid_token"}
+    )
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json()["detail"] == "Invalid or expired token"
+
+
+async def test_me_endpoint_deleted_user(client, db_session):
+    user = User(email="test@mail.com", password_hash=hash_password("123456"))
+    db_session.add(user)
+    await db_session.commit()
+
+    response = await client.post(
+        "/api/v1/auth/login", json={"email": "test@mail.com", "password": "123456"}
+    )
+
+    token = response.json()["access_token"]
+
+    await db_session.delete(user)
+    await db_session.commit()
+    db_session.expunge_all()  # clear session cache
+
+    response = await client.get(
+        "/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"}
+    )
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json()["detail"] == "User does not exists"
