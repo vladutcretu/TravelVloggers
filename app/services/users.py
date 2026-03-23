@@ -25,3 +25,6 @@ class UsersService:
         for field, value in updated_data.items():
             setattr(user, field, value)
         return await self.repository.update_user(user)
+
+    async def delete_user(self, user: User) -> None:
+        return await self.repository.delete_user(user)
