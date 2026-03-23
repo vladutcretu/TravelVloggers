@@ -211,5 +211,5 @@ async def test_me_endpoint_deleted_user(client, db_session):
         "/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"}
     )
 
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
-    assert response.json()["detail"] == "User does not exists"
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "User does not exist"

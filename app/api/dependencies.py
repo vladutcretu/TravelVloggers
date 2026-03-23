@@ -10,7 +10,7 @@ from app.repositories.auth import AuthRepository
 from app.services.auth import (
     AuthService,
     AccessTokenInvalidError,
-    UserDoesntExistsError,
+    UserDoesntExistError,
 )
 
 
@@ -40,11 +40,10 @@ async def get_current_user(
 
     try:
         user = await service.get_user_by_id(user_id)
-    except UserDoesntExistsError:
+    except UserDoesntExistError:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User does not exists",
-            headers={"WWW-Authenticate": "Bearer"},
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User does not exist",
         )
 
     return user
