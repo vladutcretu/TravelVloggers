@@ -39,3 +39,7 @@ class UserPrivateResponse(BaseModel):
 
 class UserPublicResponse(UserPrivateResponse):
     created_at: datetime
+
+
+class UserUpdate(BaseModel):
+    is_admin: bool = Field(default=False)
