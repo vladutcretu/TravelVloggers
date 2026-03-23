@@ -116,3 +116,36 @@ async def user_token(db_session):
 
     token = create_access_token(data={"sub": str(user.id)})
     return token
+
+
+@pytest.fixture()
+async def superuser(db_session):
+    """
+    Create a superuser account using db_session and return it.
+    """
+    superuser = User(email=settings.SUPERUSER_EMAIL, password_hash="123456")
+    db_session.add(superuser)
+    await db_session.commit()
+    return superuser
+
+
+@pytest.fixture()
+async def admin(db_session):
+    """
+    Create an admin account using db_session and return it.
+    """
+    admin = User(email="admin@mail.com", password_hash="123456", is_admin=True)
+    db_session.add(admin)
+    await db_session.commit()
+    return admin
+
+
+@pytest.fixture()
+async def user(db_session):
+    """
+    Create a standard user account using db_session and return it.
+    """
+    user = User(email="user@mail.com", password_hash="123456")
+    db_session.add(user)
+    await db_session.commit()
+    return user
