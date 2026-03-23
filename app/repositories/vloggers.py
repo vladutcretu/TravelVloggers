@@ -1,15 +1,34 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 
 from app.models.vlogger import Vlogger
-from app.schemas.vlogger import VloggerCreate
+
+
+class VloggerAlreadyExistsError(Exception):
+    pass
 
 
 class VloggersRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_vlogger_by_channel_id(self, channel_id) -> Vlogger | None:
-        pass
+    async def create_vlogger(self, vlogger_data: dict[str, str]) -> Vlogger:
+        new_vlogger = Vlogger(**vlogger_data)
+        self.db.add(new_vlogger)
 
-    async def create_vlogger(self, vlogger_data: VloggerCreate) -> Vlogger:
-        pass
+        try:
+            await self.db.commit()
+            await self.db.refresh(new_vlogger)
+        except IntegrityError as e:
+            await self.db.rollback()
+            error_str = str(e.orig)
+            unique_fields = [
+                "youtube_channel_id",
+                "youtube_channel_name",
+                "youtube_channel_url",
+            ]
+            if any(field in error_str for field in unique_fields):
+                raise VloggerAlreadyExistsError() from e
+            raise e
+
+        return new_vlogger
