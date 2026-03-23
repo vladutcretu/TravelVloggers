@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 
@@ -33,3 +35,7 @@ class UserPrivateResponse(BaseModel):
     email: EmailStr
     is_admin: bool
     is_superuser: bool
+
+
+class UserPublicResponse(UserPrivateResponse):
+    created_at: datetime

@@ -6,6 +6,8 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from app.core.config import settings
 from app.db.connection import Base, get_db
 from main import app
+from app.models.user import User
+from app.core.security import create_access_token
 
 
 DB_TEST_URL = (
@@ -72,3 +74,45 @@ async def client(db_session):
         yield ac
 
     app.dependency_overrides.clear()
+
+
+# Fixtures for reusability
+@pytest.fixture()
+async def superuser_token(db_session):
+    """
+    Create a superuser account using db_session and return its access token.
+    """
+    superuser = User(
+        email=settings.SUPERUSER_EMAIL, password_hash="123456", is_superuser=True
+    )
+    db_session.add(superuser)
+    await db_session.commit()
+
+    token = create_access_token(data={"sub": str(superuser.id)})
+    return token
+
+
+@pytest.fixture()
+async def admin_token(db_session):
+    """
+    Create an admin account using db_session and return its access token.
+    """
+    admin = User(email="admin@mail.com", password_hash="123456", is_admin=True)
+    db_session.add(admin)
+    await db_session.commit()
+
+    token = create_access_token(data={"sub": str(admin.id)})
+    return token
+
+
+@pytest.fixture()
+async def user_token(db_session):
+    """
+    Create a standard user account using db_session and return its access token.
+    """
+    user = User(email="user@mail.com", password_hash="123456")
+    db_session.add(user)
+    await db_session.commit()
+
+    token = create_access_token(data={"sub": str(user.id)})
+    return token
