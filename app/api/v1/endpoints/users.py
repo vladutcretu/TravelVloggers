@@ -18,7 +18,9 @@ async def get_users(db: DatabaseSession, current_user: CurrentUser):
         return await service.get_users()
     else:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authorized"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authorized",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
 
@@ -33,7 +35,9 @@ async def update_user(
 
     if not current_user.is_superuser:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authorized"
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authorized",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     try:

@@ -25,7 +25,7 @@ class AccessTokenInvalidError(Exception):
     pass
 
 
-class UserDoesntExistsError(Exception):
+class UserDoesntExistError(Exception):
     pass
 
 
@@ -80,5 +80,5 @@ class AuthService:
     async def get_user_by_id(self, user_id: int) -> User:
         user = await self.repository.get_user_by_id(user_id)
         if user is None:
-            raise UserDoesntExistsError()
+            raise UserDoesntExistError()
         return user
