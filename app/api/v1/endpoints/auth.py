@@ -8,10 +8,9 @@ from app.schemas.user import (
     UserPrivateResponse,
 )
 from app.api.dependencies import DatabaseSession, CurrentUser
-from app.repositories.auth import AuthRepository
+from app.repositories.auth import AuthRepository, EmailAlreadyExistsError
 from app.services.auth import (
     AuthService,
-    EmailAlreadyExistsError,
     EmailOrPasswordIncorrectError,
 )
 

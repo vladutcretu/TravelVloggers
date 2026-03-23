@@ -1,7 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 
 from app.models.user import User
+
+
+class EmailAlreadyExistsError(Exception):
+    pass
 
 
 class AuthRepository:
@@ -20,8 +25,14 @@ class AuthRepository:
             email=email, password_hash=hashed_password, is_superuser=is_superuser
         )
         self.db.add(new_user)
-        await self.db.commit()
-        await self.db.refresh(new_user)
+
+        try:
+            await self.db.commit()
+            await self.db.refresh(new_user)
+        except IntegrityError:
+            await self.db.rollback()
+            raise EmailAlreadyExistsError()
+
         return new_user
 
     async def get_user_by_id(self, user_id: int) -> User | None:

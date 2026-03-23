@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, HTTPException
 
 from app.schemas.user import UserPublicResponse, UserUpdate
-from app.api.dependencies import DatabaseSession, CurrentUser
+from app.api.dependencies import CurrentUser, DatabaseSession
 from app.repositories.users import UsersRepository
 from app.services.users import UsersService, UserDoesntExistError
 
@@ -10,35 +10,32 @@ router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @router.get("", response_model=list[UserPublicResponse], status_code=status.HTTP_200_OK)
-async def get_users(db: DatabaseSession, current_user: CurrentUser):
+async def get_users(current_user: CurrentUser, db: DatabaseSession):
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized",
+        )
+
     repository = UsersRepository(db)
     service = UsersService(repository)
-
-    if current_user.is_superuser:  # request is made by a superuser
-        return await service.get_users()
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authorized",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    return await service.get_users()
 
 
 @router.patch(
     "/{user_id}", response_model=UserPublicResponse, status_code=status.HTTP_200_OK
 )
 async def update_user(
-    user_id: int, user_data: UserUpdate, db: DatabaseSession, current_user: CurrentUser
+    user_id: int, user_data: UserUpdate, current_user: CurrentUser, db: DatabaseSession
 ):
-    repository = UsersRepository(db)
-    service = UsersService(repository)
-
     if not current_user.is_superuser:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized",
-            headers={"WWW-Authenticate": "Bearer"},
         )
+
+    repository = UsersRepository(db)
+    service = UsersService(repository)
 
     try:
         user = await service.get_user_by_id(user_id)
@@ -52,16 +49,15 @@ async def update_user(
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user(user_id: int, db: DatabaseSession, current_user: CurrentUser):
-    repository = UsersRepository(db)
-    service = UsersService(repository)
-
+async def delete_user(user_id: int, current_user: CurrentUser, db: DatabaseSession):
     if not current_user.is_superuser:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized",
-            headers={"WWW-Authenticate": "Bearer"},
         )
+
+    repository = UsersRepository(db)
+    service = UsersService(repository)
 
     try:
         user = await service.get_user_by_id(user_id)

@@ -53,7 +53,7 @@ async def test_get_users_endpoint_as_admin(client, admin_token):
         "/api/v1/users", headers={"Authorization": f"Bearer {admin_token}"}
     )
 
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == status.HTTP_403_FORBIDDEN
     assert response.json()["detail"] == "Not authorized"
 
 
@@ -62,7 +62,7 @@ async def test_get_users_endpoint_as_user(client, user_token):
         "/api/v1/users", headers={"Authorization": f"Bearer {user_token}"}
     )
 
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == status.HTTP_403_FORBIDDEN
     assert response.json()["detail"] == "Not authorized"
 
 
@@ -119,7 +119,7 @@ async def test_patch_users_endpoint_as_admin(client, user, admin_token):
         json={"is_admin": True},
     )
 
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == status.HTTP_403_FORBIDDEN
     assert response.json()["detail"] == "Not authorized"
 
 
@@ -132,7 +132,7 @@ async def test_patch_users_endpoint_as_user(client, admin, user_token):
         json={"is_admin": False},
     )
 
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == status.HTTP_403_FORBIDDEN
     assert response.json()["detail"] == "Not authorized"
 
 
@@ -224,7 +224,7 @@ async def test_delete_users_endpoint_as_admin(client, user, admin_token):
         f"/api/v1/users/{user.id}", headers={"Authorization": f"Bearer {admin_token}"}
     )
 
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == status.HTTP_403_FORBIDDEN
     assert response.json()["detail"] == "Not authorized"
     assert user.id
 
@@ -236,7 +236,7 @@ async def test_delete_users_endpoint_as_user(client, admin, user_token):
         f"/api/v1/users/{admin.id}", headers={"Authorization": f"Bearer {user_token}"}
     )
 
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.status_code == status.HTTP_403_FORBIDDEN
     assert response.json()["detail"] == "Not authorized"
     assert admin.id
 
