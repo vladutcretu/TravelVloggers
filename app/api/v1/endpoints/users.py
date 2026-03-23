@@ -49,3 +49,25 @@ async def update_user(
 
     updated_user = await service.update_user(user, user_data)
     return updated_user
+
+
+@router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(user_id: int, db: DatabaseSession, current_user: CurrentUser):
+    repository = UsersRepository(db)
+    service = UsersService(repository)
+
+    if not current_user.is_superuser:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authorized",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    try:
+        user = await service.get_user_by_id(user_id)
+    except UserDoesntExistError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User does not exist"
+        )
+
+    return await service.delete_user(user)

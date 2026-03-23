@@ -1,4 +1,7 @@
 from fastapi import status
+from sqlalchemy import select
+
+from app.models.user import User
 
 
 # Endpoint GET /api/v1/users
@@ -70,7 +73,7 @@ async def test_get_users_endpoint_without_token(client):
     assert response.json()["detail"] == "Not authenticated"
 
 
-# Endpoint PATCH /api/v1/users
+# Endpoint PATCH /api/v1/users/{user_id}
 async def test_patch_users_endpoint_success_user_to_admin(
     client, user, superuser_token
 ):
@@ -133,6 +136,17 @@ async def test_patch_users_endpoint_as_user(client, admin, user_token):
     assert response.json()["detail"] == "Not authorized"
 
 
+async def test_patch_users_endpoint_without_token(client, user):
+    assert user.id
+
+    response = await client.patch(
+        f"/api/v1/users/{user.id}", headers={"Authorization": "Bearer "}
+    )
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json()["detail"] == "Not authenticated"
+
+
 async def test_patch_users_endpoint_with_invalid_user(client, superuser_token):
     response = await client.patch(
         "/api/v1/users/34682",
@@ -185,3 +199,63 @@ async def test_patch_users_endpoint_with_str(client, user, superuser_token):
 
     assert response.status_code == status.HTTP_200_OK
     assert response.json()["is_admin"]
+
+
+# Endpoint DELETE /api/v1/users/{user_id}
+async def test_delete_users_endpoint_success(client, user, superuser_token, db_session):
+    assert user.id
+
+    response = await client.delete(
+        f"/api/v1/users/{user.id}",
+        headers={"Authorization": f"Bearer {superuser_token}"},
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    result = await db_session.execute(select(User).where(User.id == user.id))
+    deleted_user = result.scalar_one_or_none()
+    assert deleted_user is None
+
+
+async def test_delete_users_endpoint_as_admin(client, user, admin_token):
+    assert user.id
+
+    response = await client.delete(
+        f"/api/v1/users/{user.id}", headers={"Authorization": f"Bearer {admin_token}"}
+    )
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json()["detail"] == "Not authorized"
+    assert user.id
+
+
+async def test_delete_users_endpoint_as_user(client, admin, user_token):
+    assert admin.id
+
+    response = await client.delete(
+        f"/api/v1/users/{admin.id}", headers={"Authorization": f"Bearer {user_token}"}
+    )
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json()["detail"] == "Not authorized"
+    assert admin.id
+
+
+async def test_delete_users_endpoint_without_token(client, user):
+    assert user.id
+
+    response = await client.delete(
+        f"/api/v1/users/{user.id}", headers={"Authorization": "Bearer "}
+    )
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json()["detail"] == "Not authenticated"
+
+
+async def test_delete_users_endpoint_invalid_user(client, superuser_token):
+    response = await client.delete(
+        "/api/v1/users/32536", headers={"Authorization": f"Bearer {superuser_token}"}
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "User does not exist"
