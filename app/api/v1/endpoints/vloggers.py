@@ -11,9 +11,7 @@ router = APIRouter(prefix="/vloggers", tags=["Vloggers"])
 
 @router.post("", response_model=VloggerResponse, status_code=status.HTTP_201_CREATED)
 async def create_vlogger(
-    vlogger_data: VloggerCreate,
-    current_user: CurrentUser,
-    db: DatabaseSession,
+    vlogger_data: VloggerCreate, current_user: CurrentUser, db: DatabaseSession
 ):
     if not current_user.is_admin:
         raise HTTPException(

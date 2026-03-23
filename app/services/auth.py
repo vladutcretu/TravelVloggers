@@ -1,8 +1,6 @@
 from datetime import timedelta
 
-from sqlalchemy.exc import IntegrityError
-
-from app.repositories.auth import AuthRepository
+from app.repositories.auth import AuthRepository, EmailAlreadyExistsError
 from app.models.user import User
 from app.core.security import (
     hash_password,
@@ -11,10 +9,6 @@ from app.core.security import (
     verify_access_token,
 )
 from app.core.config import settings
-
-
-class EmailAlreadyExistsError(Exception):
-    pass
 
 
 class EmailOrPasswordIncorrectError(Exception):
@@ -41,15 +35,9 @@ class AuthService:
             raise EmailAlreadyExistsError()
 
         hashed_password = hash_password(password)
-
         is_superuser = email == settings.SUPERUSER_EMAIL
 
-        try:
-            user = await self.repository.create_user(
-                email, hashed_password, is_superuser
-            )
-        except IntegrityError:
-            raise EmailAlreadyExistsError()
+        user = await self.repository.create_user(email, hashed_password, is_superuser)
         return user
 
     async def login_user(self, email: str, password: str) -> str:
