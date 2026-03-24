@@ -26,5 +26,7 @@ class Settings(BaseSettings):
     access_token_secret_key: SecretStr
     access_token_algorithm: str = "HS256"
 
+    responses_per_page: int = 10
+
 
 settings = Settings()  # type: ignore[call-arg]

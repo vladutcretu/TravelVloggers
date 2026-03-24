@@ -9,6 +9,7 @@ from main import app
 from app.models.user import User
 from app.models.vlogger import Vlogger
 from app.core.security import create_access_token
+from app.api.dependencies import Pagination, pagination_params
 
 
 DB_TEST_URL = (
@@ -79,7 +80,7 @@ async def client(db_session):
 
 # Fixtures for reusability
 @pytest.fixture()
-async def superuser_token(db_session):
+async def superuser_token(db_session) -> str:
     """
     Create a superuser account using db_session and return its access token.
     """
@@ -94,7 +95,7 @@ async def superuser_token(db_session):
 
 
 @pytest.fixture()
-async def admin_token(db_session):
+async def admin_token(db_session) -> str:
     """
     Create an admin account using db_session and return its access token.
     """
@@ -107,7 +108,7 @@ async def admin_token(db_session):
 
 
 @pytest.fixture()
-async def user_token(db_session):
+async def user_token(db_session) -> str:
     """
     Create a standard user account using db_session and return its access token.
     """
@@ -120,7 +121,7 @@ async def user_token(db_session):
 
 
 @pytest.fixture()
-async def superuser(db_session):
+async def superuser(db_session) -> User:
     """
     Create a superuser account using db_session and return it.
     """
@@ -131,7 +132,7 @@ async def superuser(db_session):
 
 
 @pytest.fixture()
-async def admin(db_session):
+async def admin(db_session) -> User:
     """
     Create an admin account using db_session and return it.
     """
@@ -142,7 +143,7 @@ async def admin(db_session):
 
 
 @pytest.fixture()
-async def user(db_session):
+async def user(db_session) -> User:
     """
     Create a standard user account using db_session and return it.
     """
@@ -153,7 +154,7 @@ async def user(db_session):
 
 
 @pytest.fixture()
-async def vlogger(db_session):
+async def vlogger(db_session) -> Vlogger:
     """
     Create a vlogger instance using db_session and return it.
     """
@@ -166,3 +167,38 @@ async def vlogger(db_session):
     db_session.add(vlogger)
     await db_session.commit()
     return vlogger
+
+
+@pytest.fixture()
+async def pagination() -> Pagination:
+    """
+    Read default values for pagination params (skip, limit and order) and return they.
+    """
+    return pagination_params()
+
+
+@pytest.fixture()
+async def vloggers_factory(db_session):
+    """
+    Create multiple vlogger instances using db_session and return it.
+    """
+    async def _create_vloggers(instances: int = 15) -> list[Vlogger]:
+        vloggers_list = []
+        for i in range(instances):
+            vlogger = Vlogger(
+                youtube_channel_id=f"id_{i}",
+                youtube_channel_name=f"name_{i}",
+                youtube_channel_url=f"url_{i}",
+                youtube_avatar_url=f"avatar_{i}",
+            )
+            db_session.add(vlogger)
+            vloggers_list.append(vlogger)
+
+        await db_session.commit()
+
+        for vlogger in vloggers_list:
+            await db_session.refresh(vlogger)
+
+        return vloggers_list
+
+    return _create_vloggers

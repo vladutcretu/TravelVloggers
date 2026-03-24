@@ -25,3 +25,10 @@ class VloggerUpdate(BaseModel):
     youtube_channel_name: str | None = Field(default=None, max_length=255)
     youtube_channel_url: str | None = Field(default=None, max_length=255)
     youtube_avatar_url: str | None = Field(default=None, max_length=255)
+
+
+class VloggerResponsePaginated(BaseModel):
+    vloggers: list[VloggerResponse]
+    skip: int
+    limit: int
+    has_more: bool

@@ -1,11 +1,13 @@
-from typing import Annotated
+from typing import Annotated, Literal
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel
 
 from app.models.user import User
 from app.db.connection import get_db
+from app.core.config import settings
 from app.repositories.auth import AuthRepository
 from app.services.auth import (
     AuthService,
@@ -17,6 +19,7 @@ from app.services.auth import (
 DatabaseSession = Annotated[AsyncSession, Depends(get_db)]
 
 
+# CurrentUser dependency logic
 security = HTTPBearer()
 
 
@@ -50,3 +53,21 @@ async def get_current_user(
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
+
+
+# PaginationParams dependency logic
+class Pagination(BaseModel):
+    skip: int
+    limit: int
+    order: str
+
+
+def pagination_params(
+    skip: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=100)] = settings.responses_per_page,
+    order: Annotated[Literal["asc", "desc"], Query()] = "asc",
+) -> Pagination:
+    return Pagination(skip=skip, limit=limit, order=order)
+
+
+PaginationParams = Annotated[Pagination, Depends(pagination_params)]

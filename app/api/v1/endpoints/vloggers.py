@@ -1,7 +1,12 @@
 from fastapi import APIRouter, status, HTTPException
 
-from app.schemas.vlogger import VloggerResponse, VloggerCreate, VloggerUpdate
-from app.api.dependencies import CurrentUser, DatabaseSession
+from app.schemas.vlogger import (
+    VloggerResponse,
+    VloggerCreate,
+    VloggerUpdate,
+    VloggerResponsePaginated,
+)
+from app.api.dependencies import CurrentUser, DatabaseSession, PaginationParams
 from app.repositories.vloggers import VloggersRepository, VloggerAlreadyExistsError
 from app.services.vloggers import VloggersService, VloggerDoesntExistError
 
@@ -79,3 +84,20 @@ async def delete_vlogger(
         )
 
     return await service.delete_vlogger(vlogger)
+
+
+@router.get("", response_model=VloggerResponsePaginated, status_code=status.HTTP_200_OK)
+async def get_vloggers(db: DatabaseSession, pagination: PaginationParams):
+    repository = VloggersRepository(db)
+    service = VloggersService(repository)
+
+    vloggers, has_more = await service.get_vloggers(
+        pagination.skip, pagination.limit, pagination.order
+    )
+
+    return VloggerResponsePaginated(
+        vloggers=[VloggerResponse.model_validate(vlogger) for vlogger in vloggers],
+        skip=pagination.skip,
+        limit=pagination.limit,
+        has_more=has_more,
+    )
