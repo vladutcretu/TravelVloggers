@@ -30,3 +30,11 @@ class VloggersService:
 
     async def delete_vlogger(self, vlogger: Vlogger) -> None:
         return await self.repository.delete_vlogger(vlogger)
+
+    async def get_vloggers(
+        self, skip: int, limit: int, order: str
+    ) -> tuple[list[Vlogger], bool]:
+        vloggers = await self.repository.get_vloggers(skip, limit + 1, order)
+        has_more = len(vloggers) > limit
+        vloggers = vloggers[:limit]
+        return vloggers, has_more

@@ -48,3 +48,13 @@ class VloggersRepository:
         await self.db.delete(vlogger)
         await self.db.commit()
         return
+
+    async def get_vloggers(self, skip: int, limit: int, order: str) -> list[Vlogger]:
+        order_by = (
+            Vlogger.created_at.asc() if order == "asc" else Vlogger.created_at.desc()
+        )
+        result = await self.db.execute(
+            select(Vlogger).order_by(order_by).offset(skip).limit(limit)
+        )
+        vloggers = list(result.scalars().all())
+        return vloggers
