@@ -19,3 +19,9 @@ class VloggerResponse(VloggerBase):
 
     id: int
     created_at: datetime
+
+
+class VloggerUpdate(BaseModel):
+    youtube_channel_name: str | None = Field(default=None, max_length=255)
+    youtube_channel_url: str | None = Field(default=None, max_length=255)
+    youtube_avatar_url: str | None = Field(default=None, max_length=255)

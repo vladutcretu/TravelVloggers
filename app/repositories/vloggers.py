@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select
 
 from app.models.vlogger import Vlogger
 
@@ -32,3 +33,13 @@ class VloggersRepository:
             raise e
 
         return new_vlogger
+
+    async def get_vlogger_by_id(self, vlogger_id: int) -> Vlogger | None:
+        result = await self.db.execute(select(Vlogger).where(Vlogger.id == vlogger_id))
+        vlogger = result.scalars().first()
+        return vlogger
+
+    async def update_vlogger(self, vlogger: Vlogger) -> Vlogger:
+        await self.db.commit()
+        await self.db.refresh(vlogger)
+        return vlogger
