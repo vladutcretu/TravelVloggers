@@ -1,4 +1,5 @@
 from fastapi import status
+from sqlalchemy import select
 
 from app.models.vlogger import Vlogger
 
@@ -311,3 +312,67 @@ async def test_patch_vloggers_endpoint_invalid_type(vlogger, client, admin_token
     )
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+# Endpoint DELETE /api/v1/vloggers/{user_id}
+async def test_delete_vloggers_endpoint_success(
+    vlogger, client, admin_token, db_session
+):
+    assert vlogger.id
+
+    response = await client.delete(
+        f"/api/v1/vloggers/{vlogger.id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    result = await db_session.execute(select(Vlogger).where(Vlogger.id == vlogger.id))
+    deleted_vlogger = result.scalar_one_or_none()
+    assert deleted_vlogger is None
+
+
+async def test_delete_vloggers_endpoint_as_superuser(vlogger, client, superuser_token):
+    assert vlogger.id
+
+    response = await client.delete(
+        f"/api/v1/vloggers/{vlogger.id}",
+        headers={"Authorization": f"Bearer {superuser_token}"},
+    )
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == "Not authorized"
+    assert vlogger.id
+
+
+async def test_delete_vloggers_endpoint_as_user(vlogger, client, user_token):
+    assert vlogger.id
+
+    response = await client.delete(
+        f"/api/v1/vloggers/{vlogger.id}",
+        headers={"Authorization": f"Bearer {user_token}"},
+    )
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == "Not authorized"
+    assert vlogger.id
+
+
+async def test_delete_vloggers_endpoint_without_token(vlogger, client):
+    assert vlogger.id
+
+    response = await client.delete(
+        f"/api/v1/vloggers/{vlogger.id}", headers={"Authorization": "Bearer "}
+    )
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json()["detail"] == "Not authenticated"
+
+
+async def test_delete_vloggers_endpoint_invalid_vlogger(client, admin_token):
+    response = await client.delete(
+        "/api/v1/vloggers/24342", headers={"Authorization": f"Bearer {admin_token}"}
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "Vlogger does not exist"
