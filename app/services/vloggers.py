@@ -27,3 +27,6 @@ class VloggersService:
         for field, value in updated_data.items():
             setattr(vlogger, field, value)
         return await self.repository.update_vlogger(vlogger)
+
+    async def delete_vlogger(self, vlogger: Vlogger) -> None:
+        return await self.repository.delete_vlogger(vlogger)

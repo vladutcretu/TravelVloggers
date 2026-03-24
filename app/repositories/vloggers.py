@@ -43,3 +43,8 @@ class VloggersRepository:
         await self.db.commit()
         await self.db.refresh(vlogger)
         return vlogger
+
+    async def delete_vlogger(self, vlogger: Vlogger) -> None:
+        await self.db.delete(vlogger)
+        await self.db.commit()
+        return
