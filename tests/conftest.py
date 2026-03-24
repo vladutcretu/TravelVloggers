@@ -7,6 +7,7 @@ from app.core.config import settings
 from app.db.connection import Base, get_db
 from main import app
 from app.models.user import User
+from app.models.vlogger import Vlogger
 from app.core.security import create_access_token
 
 
@@ -149,3 +150,19 @@ async def user(db_session):
     db_session.add(user)
     await db_session.commit()
     return user
+
+
+@pytest.fixture()
+async def vlogger(db_session):
+    """
+    Create a vlogger instance using db_session and return it.
+    """
+    vlogger = Vlogger(
+        youtube_channel_id="test_channel_id",
+        youtube_channel_name="test_channel_name",
+        youtube_channel_url="test_channel_url",
+        youtube_avatar_url="test_avatar_url",
+    )
+    db_session.add(vlogger)
+    await db_session.commit()
+    return vlogger
