@@ -314,7 +314,7 @@ async def test_patch_vloggers_endpoint_invalid_type(vlogger, client, admin_token
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
 
 
-# Endpoint DELETE /api/v1/vloggers/{user_id}
+# Endpoint DELETE /api/v1/vloggers/{vlogger_id}
 async def test_delete_vloggers_endpoint_success(
     vlogger, client, admin_token, db_session
 ):
@@ -376,3 +376,220 @@ async def test_delete_vloggers_endpoint_invalid_vlogger(client, admin_token):
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
     assert response.json()["detail"] == "Vlogger does not exist"
+
+
+# Endpoint GET /api/v1/vloggers/
+async def test_get_vloggers_endpoint_without_more(vloggers_factory, client, pagination):
+    vloggers = await vloggers_factory(instances=pagination.limit)
+
+    response = await client.get(
+        f"/api/v1/vloggers?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert len(data) == 4  # Vlogger items + 3 params
+    assert len(data["vloggers"]) == min(len(vloggers), pagination.limit)
+
+    item = data["vloggers"][0]
+    assert item["youtube_channel_id"] == "id_0"
+    assert item["youtube_channel_name"] == "name_0"
+    assert item["youtube_channel_url"] == "url_0"
+    assert item["youtube_avatar_url"] == "avatar_0"
+    assert "id" in item
+    assert "created_at" in item
+
+    assert data["skip"] == pagination.skip
+    assert data["limit"] == pagination.limit
+    assert data["has_more"] is False
+
+
+async def test_get_vloggers_endpoint_with_more(vloggers_factory, client, pagination):
+    vloggers = await vloggers_factory(instances=pagination.limit + 1)
+
+    response = await client.get(
+        f"/api/v1/vloggers?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert len(data) == 4
+    assert len(data["vloggers"]) == min(len(vloggers), pagination.limit)
+
+    item = data["vloggers"][8]
+    assert item["youtube_channel_id"] == "id_8"
+    assert item["youtube_channel_name"] == "name_8"
+    assert item["youtube_channel_url"] == "url_8"
+    assert item["youtube_avatar_url"] == "avatar_8"
+    assert "id" in item
+    assert "created_at" in item
+
+    assert data["skip"] == pagination.skip
+    assert data["limit"] == pagination.limit
+    assert data["has_more"] is True
+
+
+async def test_get_vloggers_endpoint_with_skip(vloggers_factory, client, pagination):
+    vloggers = await vloggers_factory(instances=pagination.limit)
+
+    pagination.skip = 1
+
+    response = await client.get(
+        f"/api/v1/vloggers?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+
+    total_vloggers = len(vloggers)
+    expected_count = max(0, total_vloggers - 1)  # skip = 1
+    returned_count = len(data["vloggers"])
+
+    assert returned_count == expected_count
+
+    first_returned_vlogger = data["vloggers"][0]
+    second_vlogger = vloggers[1]
+
+    assert first_returned_vlogger["id"] == second_vlogger.id
+    assert (
+        first_returned_vlogger["youtube_channel_name"]
+        == second_vlogger.youtube_channel_name
+    )
+
+    assert data["skip"] == 1
+    assert data["limit"] == pagination.limit
+    assert data["has_more"] is False
+
+
+async def test_get_vloggers_endpoint_with_limit(vloggers_factory, client, pagination):
+    vloggers = await vloggers_factory(instances=pagination.limit)
+
+    pagination.limit = 2
+
+    response = await client.get(
+        f"/api/v1/vloggers?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert len(data["vloggers"]) == min(len(vloggers), pagination.limit)
+
+
+async def test_get_vloggers_endpoint_with_order_asc(
+    vloggers_factory, client, pagination
+):
+    vloggers = await vloggers_factory(instances=pagination.limit)
+
+    pagination.order = "asc"
+
+    response = await client.get(
+        f"/api/v1/vloggers?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert len(data["vloggers"]) == min(len(vloggers), pagination.limit)
+
+    vloggers_sorted_desc = sorted(
+        vloggers, key=lambda vlogger: vlogger.created_at, reverse=False
+    )
+    first_returned_vlogger = data["vloggers"][0]
+    first_created_vlogger = vloggers_sorted_desc[0]
+
+    assert first_returned_vlogger["id"] == first_created_vlogger.id
+    assert (
+        first_returned_vlogger["youtube_channel_name"]
+        == first_created_vlogger.youtube_channel_name
+    )
+
+
+async def test_get_vloggers_endpoint_with_order_desc(
+    vloggers_factory, client, pagination
+):
+    vloggers = await vloggers_factory(instances=pagination.limit)
+
+    pagination.order = "desc"
+
+    response = await client.get(
+        f"/api/v1/vloggers?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert len(data["vloggers"]) == min(len(vloggers), pagination.limit)
+
+    vloggers_sorted_desc = sorted(
+        vloggers, key=lambda vlogger: vlogger.created_at, reverse=True
+    )
+    first_returned_vlogger = data["vloggers"][0]
+    last_created_vlogger = vloggers_sorted_desc[0]
+
+    assert first_returned_vlogger["id"] == last_created_vlogger.id
+    assert (
+        first_returned_vlogger["youtube_channel_name"]
+        == last_created_vlogger.youtube_channel_name
+    )
+
+
+async def test_get_vloggers_endpoint_with_skip_invalid(
+    vloggers_factory, client, pagination
+):
+    await vloggers_factory(instances=pagination.limit)
+
+    pagination.skip = -1
+
+    response = await client.get(
+        f"/api/v1/vloggers?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+async def test_get_vloggers_endpoint_with_limit_invalid(
+    vloggers_factory, client, pagination
+):
+    await vloggers_factory(instances=pagination.limit)
+
+    pagination.limit = -10
+
+    response = await client.get(
+        f"/api/v1/vloggers?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+async def test_get_vloggers_endpoint_with_order_invalid(
+    vloggers_factory, client, pagination
+):
+    await vloggers_factory(instances=pagination.limit)
+
+    pagination.order = "alpha"
+
+    response = await client.get(
+        f"/api/v1/vloggers?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+async def test_get_vloggers_endpoint_with_no_vloggers(client, pagination):
+    response = await client.get(
+        f"/api/v1/vloggers?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert len(data) == 4
+    assert len(data["vloggers"]) == 0
+
+    assert data["skip"] == pagination.skip
+    assert data["limit"] == pagination.limit
+    assert data["has_more"] is False
