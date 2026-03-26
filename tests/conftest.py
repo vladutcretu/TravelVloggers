@@ -7,9 +7,10 @@ from app.core.config import settings
 from app.db.connection import Base, get_db
 from main import app
 from app.models.user import User
-from app.models.vlogger import Vlogger
 from app.core.security import create_access_token
+from app.models.vlogger import Vlogger
 from app.api.dependencies import Pagination, pagination_params
+from app.models.vlog import Country
 
 
 DB_TEST_URL = (
@@ -182,6 +183,7 @@ async def vloggers_factory(db_session):
     """
     Create multiple vlogger instances using db_session and return it.
     """
+
     async def _create_vloggers(instances: int = 15) -> list[Vlogger]:
         vloggers_list = []
         for i in range(instances):
@@ -202,3 +204,35 @@ async def vloggers_factory(db_session):
         return vloggers_list
 
     return _create_vloggers
+
+
+@pytest.fixture()
+async def countries_factory(db_session):
+    """
+    Create multiple country instances using db_session and return it.
+    """
+
+    import string
+    from itertools import product
+
+    letters = string.ascii_uppercase
+    iso_codes = ["".join(p) for p in product(letters, repeat=2)]
+
+    async def _create_countries(instances: int = 15) -> list[Country]:
+        countries_list = []
+        for i in range(instances):
+            country = Country(
+                name=f"Name #{i}",
+                iso_code=iso_codes[i],
+            )
+            db_session.add(country)
+            countries_list.append(country)
+
+        await db_session.commit()
+
+        for country in countries_list:
+            await db_session.refresh(country)
+
+        return countries_list
+
+    return _create_countries
