@@ -10,7 +10,7 @@ from app.models.user import User
 from app.core.security import create_access_token
 from app.models.vlogger import Vlogger
 from app.api.dependencies import Pagination, pagination_params
-from app.models.vlog import Country
+from app.models.vlog import Country, Vlog
 
 
 DB_TEST_URL = (
@@ -236,3 +236,39 @@ async def countries_factory(db_session):
         return countries_list
 
     return _create_countries
+
+
+@pytest.fixture()
+async def country(db_session) -> Country:
+    """
+    Create a country instance using db_session and return it.
+    """
+    country = Country(
+        name="test_name",
+        iso_code="tn",
+    )
+    db_session.add(country)
+    await db_session.commit()
+    return country
+
+
+@pytest.fixture()
+async def vlog(vlogger, country, db_session) -> Vlog:
+    """
+    Create a vlog instance using db_session and return it.
+    """
+
+    from datetime import datetime, timezone
+
+    vlog = Vlog(
+        vlogger_id=vlogger.id,
+        country_id=country.id,
+        youtube_video_id="stringstrin",
+        published_at=datetime.now(timezone.utc),
+        title="test_title",
+        thumbnail_url="test_thumbnail_url",
+        language="en",
+    )
+    db_session.add(vlog)
+    await db_session.commit()
+    return vlog
