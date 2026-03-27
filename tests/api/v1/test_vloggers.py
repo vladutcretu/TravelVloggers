@@ -101,7 +101,7 @@ async def test_post_vloggers_endpoint_duplicate_channel_id(
         },
     )
 
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_409_CONFLICT
     assert response.json()["detail"] == "Vlogger already exists"
 
 
@@ -130,7 +130,7 @@ async def test_post_vloggers_endpoint_duplicate_channel_name(
         },
     )
 
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_409_CONFLICT
     assert response.json()["detail"] == "Vlogger already exists"
 
 
@@ -159,7 +159,7 @@ async def test_post_vloggers_endpoint_duplicate_channel_url(
         },
     )
 
-    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.status_code == status.HTTP_409_CONFLICT
     assert response.json()["detail"] == "Vlogger already exists"
 
 

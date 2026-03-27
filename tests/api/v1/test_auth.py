@@ -43,7 +43,7 @@ async def test_register_endpoint_duplicate_email(client):
     second_response = await client.post("/api/v1/auth/register", json=payload)
 
     assert first_response.status_code == status.HTTP_201_CREATED
-    assert second_response.status_code == status.HTTP_400_BAD_REQUEST
+    assert second_response.status_code == status.HTTP_409_CONFLICT
     assert second_response.json()["detail"] == "Email already registered"
 
 

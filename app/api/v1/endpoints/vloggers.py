@@ -30,7 +30,7 @@ async def create_vlogger(
         vlogger = await service.create_vlogger(vlogger_data)
     except VloggerAlreadyExistsError:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Vlogger already exists"
+            status_code=status.HTTP_409_CONFLICT, detail="Vlogger already exists"
         )
 
     return vlogger

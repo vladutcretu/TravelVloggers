@@ -32,7 +32,7 @@ async def register(user_data: UserCreate, db: DatabaseSession):
         user = await service.register_user(user_data.email, user_data.password)
     except EmailAlreadyExistsError:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_409_CONFLICT,
             detail="Email already registered",
         )
 

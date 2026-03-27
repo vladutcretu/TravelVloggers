@@ -1,10 +1,7 @@
 from app.repositories.vloggers import VloggersRepository
 from app.schemas.vlogger import VloggerCreate, VloggerUpdate
 from app.models.vlogger import Vlogger
-
-
-class VloggerDoesntExistError(Exception):
-    pass
+from app.core.exceptions import VloggerDoesntExistError
 
 
 class VloggersService:
