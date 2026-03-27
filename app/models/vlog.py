@@ -1,11 +1,14 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, ForeignKey, DateTime, func, Index
 from pydantic import computed_field
 
 from app.db.connection import Base
-from app.models.vlogger import Vlogger
+
+if TYPE_CHECKING:
+    from app.models.vlogger import Vlogger
 
 
 class Country(Base):
@@ -23,7 +26,7 @@ class Country(Base):
 
 class Vlog(Base):
     __tablename__ = "vlogs"
-    __table_args__ = Index("ix_vlogs_vlogger_country", "vlogger_id", "country_id")
+    __table_args__ = (Index("ix_vlogs_vlogger_country", "vlogger_id", "country_id"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
@@ -50,8 +53,8 @@ class Vlog(Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
-    vlogger: Mapped[Vlogger] = relationship(back_populates="vlogs")
-    country: Mapped[Country] = relationship(back_populates="vlogs")
+    vlogger: Mapped["Vlogger"] = relationship(back_populates="vlogs")
+    country: Mapped["Country"] = relationship(back_populates="vlogs")
 
     @computed_field
     @property

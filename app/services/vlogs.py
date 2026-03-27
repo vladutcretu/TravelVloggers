@@ -2,22 +2,12 @@ from app.repositories.vlogs import VlogsRepository
 from app.models.vlog import Country, Vlog
 from app.schemas.vlog import VlogCreate
 from app.clients.youtube import YoutubeClient
-
-
-class VideoIdAlreadyExistsError(Exception):
-    pass
-
-
-class VloggerDoesntExistError(Exception):
-    pass
-
-
-class CountryDoesntExistError(Exception):
-    pass
-
-
-class YoutubeDataNotFoundError(Exception):
-    pass
+from app.core.exceptions import (
+    VideoIdAlreadyExistsError,
+    VloggerDoesntExistError,
+    CountryDoesntExistError,
+    YoutubeDataNotFoundError,
+)
 
 
 class VlogsService:

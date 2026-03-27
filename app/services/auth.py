@@ -9,18 +9,11 @@ from app.core.security import (
     verify_access_token,
 )
 from app.core.config import settings
-
-
-class EmailOrPasswordIncorrectError(Exception):
-    pass
-
-
-class AccessTokenInvalidError(Exception):
-    pass
-
-
-class UserDoesntExistError(Exception):
-    pass
+from app.core.exceptions import (
+    EmailOrPasswordIncorrectError,
+    AccessTokenInvalidError,
+    UserDoesntExistError,
+)
 
 
 class AuthService:

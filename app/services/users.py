@@ -1,10 +1,7 @@
 from app.repositories.users import UsersRepository
 from app.models.user import User
 from app.schemas.user import UserUpdate
-
-
-class UserDoesntExistError(Exception):
-    pass
+from app.core.exceptions import UserDoesntExistError
 
 
 class UsersService:

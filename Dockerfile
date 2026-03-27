@@ -4,6 +4,7 @@ WORKDIR /app
 
 COPY pyproject.toml uv.lock /app/
 
+RUN apt-get update && apt-get install -y ca-certificates && update-ca-certificates
 RUN uv sync --locked
 
 COPY . /app/

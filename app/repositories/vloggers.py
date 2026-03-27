@@ -3,10 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 
 from app.models.vlogger import Vlogger
-
-
-class VloggerAlreadyExistsError(Exception):
-    pass
+from app.core.exceptions import VloggerAlreadyExistsError
 
 
 class VloggersRepository:

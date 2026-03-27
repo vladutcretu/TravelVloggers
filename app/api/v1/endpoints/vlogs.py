@@ -8,8 +8,9 @@ from app.schemas.vlog import (
 )
 from app.api.dependencies import DatabaseSession, PaginationParams, CurrentUser
 from app.repositories.vlogs import VlogsRepository
-from app.services.vlogs import (
-    VlogsService,
+from app.services.vlogs import VlogsService
+from app.clients.youtube import YoutubeClient
+from app.core.exceptions import (
     VideoIdAlreadyExistsError,
     VloggerDoesntExistError,
     CountryDoesntExistError,
@@ -55,7 +56,8 @@ async def create_vlog(
         )
 
     repository = VlogsRepository(db)
-    service = VlogsService(repository)
+    youtube_client = YoutubeClient()
+    service = VlogsService(repository, youtube_client)
 
     try:
         vlog = await service.create_vlog(vlog_data)

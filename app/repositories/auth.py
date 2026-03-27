@@ -3,10 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 
 from app.models.user import User
-
-
-class EmailAlreadyExistsError(Exception):
-    pass
+from app.core.exceptions import EmailAlreadyExistsError
 
 
 class AuthRepository:

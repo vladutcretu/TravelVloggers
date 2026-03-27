@@ -4,10 +4,7 @@ from sqlalchemy.exc import IntegrityError
 
 from app.models.vlog import Country, Vlog
 from app.models.vlogger import Vlogger
-
-
-class VideoIdAlreadyExistsError(Exception):
-    pass
+from app.core.exceptions import VideoIdAlreadyExistsError
 
 
 class VlogsRepository:

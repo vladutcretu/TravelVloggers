@@ -1,10 +1,13 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, DateTime, func
 
 from app.db.connection import Base
-from app.models.vlog import Vlog
+
+if TYPE_CHECKING:
+    from app.models.vlog import Vlog
 
 
 class Vlogger(Base):
@@ -27,6 +30,6 @@ class Vlogger(Base):
         DateTime(timezone=True), server_default=func.now()
     )
 
-    vlogs: Mapped[list[Vlog]] = relationship(
+    vlogs: Mapped[list["Vlog"]] = relationship(
         back_populates="vlogger", cascade="all, delete-orphan"
     )

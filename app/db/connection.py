@@ -9,12 +9,10 @@ DB_URL = (
     or f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}@db:5432/{settings.POSTGRES_DB}"
 )
 
-engine = create_async_engine(url=DB_URL, echo=True) # echo False on prod
+engine = create_async_engine(url=DB_URL, echo=True)  # echo False on prod
 
 
-async_session = async_sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
-)
+async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
 class Base(DeclarativeBase):

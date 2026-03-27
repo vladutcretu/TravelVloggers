@@ -5,10 +5,7 @@ from fastapi import status
 
 from app.schemas.vlog import VlogYouTubeVideoData
 from app.core.config import settings
-
-
-class YoutubeDataNotFoundError(Exception):
-    pass
+from app.core.exceptions import YoutubeDataNotFoundError
 
 
 class YoutubeClient:
@@ -39,7 +36,7 @@ class YoutubeClient:
         self.base_url = "https://www.googleapis.com/youtube/v3/videos"
         self.api_key = settings.YOUTUBE_APP_API_KEY
 
-    async def get_video_data(self, video_id: str) -> VlogYouTubeVideoData | None:
+    async def get_video_data(self, video_id: str) -> VlogYouTubeVideoData:
         params = {
             "id": video_id,
             "key": self.api_key,
