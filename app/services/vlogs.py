@@ -1,6 +1,7 @@
 from app.repositories.vlogs import VlogsRepository
 from app.models.vlog import Country, Vlog
 from app.schemas.vlog import VlogCreate
+from app.clients.youtube import YoutubeClient
 
 
 class VideoIdAlreadyExistsError(Exception):
@@ -51,6 +52,8 @@ class VlogsService:
             raise CountryDoesntExistError()
 
         # 2. call Youtube API
+        if self.youtube_client is None:
+            raise RuntimeError("YoutubeClient must be provided to create_vlog endpoint")
         youtube_data = await self.youtube_client.get_video_data(
             vlog_data.youtube_video_id
         )

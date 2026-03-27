@@ -28,5 +28,7 @@ class Settings(BaseSettings):
 
     responses_per_page: int = 10
 
+    YOUTUBE_APP_API_KEY: str | None = None
+
 
 settings = Settings()  # type: ignore[call-arg]
