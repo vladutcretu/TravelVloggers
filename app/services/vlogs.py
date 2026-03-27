@@ -3,7 +3,7 @@ from app.models.vlog import Country, Vlog
 from app.schemas.vlog import VlogCreate
 
 
-class VideoIdAlreadyExists(Exception):
+class VideoIdAlreadyExistsError(Exception):
     pass
 
 
@@ -40,7 +40,7 @@ class VlogsService:
             vlog_data.youtube_video_id
         )
         if existing_vlog:
-            raise VideoIdAlreadyExists()
+            raise VideoIdAlreadyExistsError()
 
         existing_vlogger = await self.repository.get_vlogger_by_id(vlog_data.vlogger_id)
         if existing_vlogger is None:
@@ -58,7 +58,7 @@ class VlogsService:
             raise YoutubeDataNotFoundError()
 
         # 3. map data
-        vlog = Vlog(
+        new_vlog = Vlog(
             vlogger_id=vlog_data.vlogger_id,
             country_id=vlog_data.country_id,
             youtube_video_id=vlog_data.youtube_video_id,
@@ -69,4 +69,4 @@ class VlogsService:
         )
 
         # 4. create object
-        return await self.repository.create_vlog(vlog)
+        return await self.repository.create_vlog(new_vlog)

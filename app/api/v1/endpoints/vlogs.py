@@ -10,7 +10,7 @@ from app.api.dependencies import DatabaseSession, PaginationParams, CurrentUser
 from app.repositories.vlogs import VlogsRepository
 from app.services.vlogs import (
     VlogsService,
-    VideoIdAlreadyExists,
+    VideoIdAlreadyExistsError,
     VloggerDoesntExistError,
     CountryDoesntExistError,
     YoutubeDataNotFoundError,
@@ -59,7 +59,7 @@ async def create_vlog(
 
     try:
         vlog = await service.create_vlog(vlog_data)
-    except VideoIdAlreadyExists:
+    except VideoIdAlreadyExistsError:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="Youtube Video ID already exists",
