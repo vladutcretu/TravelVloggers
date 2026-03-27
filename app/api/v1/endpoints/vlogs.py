@@ -1,9 +1,20 @@
-from fastapi import APIRouter, status, Query
+from fastapi import APIRouter, status, Query, HTTPException
 
-from app.schemas.vlog import CountryResponsePaginated, CountryResponse
-from app.api.dependencies import DatabaseSession, PaginationParams
+from app.schemas.vlog import (
+    CountryResponsePaginated,
+    CountryResponse,
+    VlogResponse,
+    VlogCreate,
+)
+from app.api.dependencies import DatabaseSession, PaginationParams, CurrentUser
 from app.repositories.vlogs import VlogsRepository
-from app.services.vlogs import VlogsService
+from app.services.vlogs import (
+    VlogsService,
+    VideoIdAlreadyExists,
+    VloggerDoesntExistError,
+    CountryDoesntExistError,
+    YoutubeDataNotFoundError,
+)
 
 
 router = APIRouter(prefix="/vlogs", tags=["Vlogs"])
@@ -32,3 +43,41 @@ async def get_countries(
         limit=pagination.limit,
         has_more=has_more,
     )
+
+
+@router.post("", response_model=VlogResponse, status_code=status.HTTP_201_CREATED)
+async def create_vlog(
+    vlog_data: VlogCreate, current_user: CurrentUser, db: DatabaseSession
+):
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized"
+        )
+
+    repository = VlogsRepository(db)
+    service = VlogsService(repository)
+
+    try:
+        vlog = await service.create_vlog(vlog_data)
+    except VideoIdAlreadyExists:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Youtube Video ID already exists",
+        )
+    except VloggerDoesntExistError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Vlogger does not exist",
+        )
+    except CountryDoesntExistError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Country does not exist",
+        )
+    except YoutubeDataNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Youtube Data not found",
+        )
+
+    return vlog
