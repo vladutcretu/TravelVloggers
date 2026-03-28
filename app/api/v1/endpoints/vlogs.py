@@ -158,3 +158,18 @@ async def get_vlogs(db: DatabaseSession, pagination: PaginationParams):
         limit=pagination.limit,
         has_more=has_more,
     )
+
+
+@router.get("/{vlog_id}", response_model=VlogResponse, status_code=status.HTTP_200_OK)
+async def get_vlog(vlog_id: int, db: DatabaseSession):
+    repository = VlogsRepository(db)
+    service = VlogsService(repository)
+
+    try:
+        vlog = await service.get_vlog_by_id(vlog_id)
+    except VlogDoesntExistError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Vlog does not exist"
+        )
+
+    return vlog

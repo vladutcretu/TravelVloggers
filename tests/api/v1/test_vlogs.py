@@ -892,3 +892,37 @@ async def test_get_vlogs_endpoint_with_no_vlogs(client, pagination):
     assert data["skip"] == pagination.skip
     assert data["limit"] == pagination.limit
     assert data["has_more"] is False
+
+
+# Endpoint GET /api/v1/vlogs/{vlog_id}
+async def test_get_vlog_endpoint_success(vlog, vlogger, country, client):
+    assert vlog.id
+
+    response = await client.get(f"/api/v1/vlogs/{vlog.id}")
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert data["vlogger_id"] == vlogger.id
+    assert data["country_id"] == country.id
+    assert data["youtube_video_id"] == "stringstrin"
+    assert data["youtube_video_url"] == "https://www.youtube.com/watch?v=stringstrin"
+    assert "published_at" in data
+    assert data["title"] == "test_title"
+    assert data["thumbnail_url"] == "test_thumbnail_url"
+    assert data["language"] == "en"
+    assert "id" in data
+    assert "created_at" in data
+
+
+async def test_get_vlog_endpoint_invalid_vlog(client):
+    response = await client.get("/api/v1/vlogs/5435")
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "Vlog does not exist"
+
+
+async def test_get_vlog_endpoint_invalid_type(client):
+    response = await client.get("/api/v1/vlogs/my-vlog")
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
