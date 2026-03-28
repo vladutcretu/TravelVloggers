@@ -5,6 +5,7 @@ from app.schemas.vlog import (
     CountryResponse,
     VlogResponse,
     VlogCreate,
+    VlogUpdate,
 )
 from app.api.dependencies import DatabaseSession, PaginationParams, CurrentUser
 from app.repositories.vlogs import VlogsRepository
@@ -15,6 +16,7 @@ from app.core.exceptions import (
     VloggerDoesntExistError,
     CountryDoesntExistError,
     YoutubeDataNotFoundError,
+    VlogDoesntExistError,
 )
 
 
@@ -83,3 +85,38 @@ async def create_vlog(
         )
 
     return vlog
+
+
+@router.patch("/{vlog_id}", response_model=VlogResponse, status_code=status.HTTP_200_OK)
+async def update_vlog(
+    vlog_id: int, vlog_data: VlogUpdate, current_user: CurrentUser, db: DatabaseSession
+):
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized"
+        )
+
+    repository = VlogsRepository(db)
+    service = VlogsService(repository)
+
+    try:
+        vlog = await service.get_vlog_by_id(vlog_id)
+    except VlogDoesntExistError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Vlog does not exist"
+        )
+
+    try:
+        updated_vlog = await service.update_vlog(vlog, vlog_data)
+    except VloggerDoesntExistError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Vlogger does not exist",
+        )
+    except CountryDoesntExistError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Country does not exist",
+        )
+
+    return updated_vlog

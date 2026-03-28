@@ -450,3 +450,189 @@ async def test_post_vlogs_endpoint_success(
     assert data["youtube_video_url"] == "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
     assert "id" in data
     assert "created_at" in data
+
+
+# Endpoint PATCH /api/v1/vlogs/{vlog_id}
+async def test_patch_vlogs_endpoint_success(
+    vloggers_factory, countries_factory, vlog, client, admin_token
+):
+    vloggers = await vloggers_factory(instances=1)
+    countries = await countries_factory(instances=1)
+
+    response = await client.patch(
+        f"/api/v1/vlogs/{vlog.id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={
+            "vlogger_id": vloggers[0].id,
+            "country_id": countries[0].id,
+        },
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert len(data) == 10
+
+    assert data["vlogger_id"] == vloggers[0].id
+    assert data["country_id"] == countries[0].id
+    assert data["youtube_video_id"] == "stringstrin"
+    assert "published_at" in data
+    assert data["title"] == "test_title"
+    assert data["thumbnail_url"] == "test_thumbnail_url"
+    assert data["language"] == "en"
+    assert data["youtube_video_url"] == "https://www.youtube.com/watch?v=stringstrin"
+    assert "id" in data
+    assert "created_at" in data
+
+
+async def test_patch_vlogs_endpoint_with_only_vlogger(
+    vloggers_factory, vlog, country, client, admin_token
+):
+    vloggers = await vloggers_factory(instances=1)
+
+    response = await client.patch(
+        f"/api/v1/vlogs/{vlog.id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={
+            "vlogger_id": vloggers[0].id,
+        },
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert len(data) == 10
+
+    assert data["vlogger_id"] == vloggers[0].id
+    assert data["country_id"] == country.id
+    assert data["youtube_video_id"] == "stringstrin"
+    assert "published_at" in data
+    assert data["title"] == "test_title"
+    assert data["thumbnail_url"] == "test_thumbnail_url"
+    assert data["language"] == "en"
+    assert data["youtube_video_url"] == "https://www.youtube.com/watch?v=stringstrin"
+    assert "id" in data
+    assert "created_at" in data
+
+
+async def test_patch_vlogs_endpoint_with_only_country(
+    countries_factory, vlog, vlogger, client, admin_token
+):
+    countries = await countries_factory(instances=1)
+
+    response = await client.patch(
+        f"/api/v1/vlogs/{vlog.id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={
+            "country_id": countries[0].id,
+        },
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert len(data) == 10
+
+    assert data["vlogger_id"] == vlogger.id
+    assert data["country_id"] == countries[0].id
+    assert data["youtube_video_id"] == "stringstrin"
+    assert "published_at" in data
+    assert data["title"] == "test_title"
+    assert data["thumbnail_url"] == "test_thumbnail_url"
+    assert data["language"] == "en"
+    assert data["youtube_video_url"] == "https://www.youtube.com/watch?v=stringstrin"
+    assert "id" in data
+    assert "created_at" in data
+
+
+async def test_patch_vlogs_endpoint_without_access(
+    vloggers_factory, countries_factory, vlog, client, user_token
+):
+    vloggers = await vloggers_factory(instances=1)
+    countries = await countries_factory(instances=1)
+
+    response = await client.patch(
+        f"/api/v1/vlogs/{vlog.id}",
+        headers={"Authorization": f"Bearer {user_token}"},
+        json={
+            "vlogger_id": vloggers[0].id,
+            "country_id": countries[0].id,
+        },
+    )
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == "Not authorized"
+
+
+async def test_patch_vlogs_endpoint_without_token(
+    vloggers_factory, countries_factory, vlog, client
+):
+    vloggers = await vloggers_factory(instances=1)
+    countries = await countries_factory(instances=1)
+
+    response = await client.patch(
+        f"/api/v1/vlogs/{vlog.id}",
+        headers={"Authorization": "Bearer "},
+        json={
+            "vlogger_id": vloggers[0].id,
+            "country_id": countries[0].id,
+        },
+    )
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json()["detail"] == "Not authenticated"
+
+
+async def test_patch_vlogs_endpoint_invalid_vlog(
+    vloggers_factory, countries_factory, client, admin_token
+):
+    vloggers = await vloggers_factory(instances=1)
+    countries = await countries_factory(instances=1)
+
+    response = await client.patch(
+        "/api/v1/vlogs/43445",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={
+            "vlogger_id": vloggers[0].id,
+            "country_id": countries[0].id,
+        },
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "Vlog does not exist"
+
+
+async def test_patch_vlogs_endpoint_invalid_vlogger(vlog, client, admin_token):
+    response = await client.patch(
+        f"/api/v1/vlogs/{vlog.id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={
+            "vlogger_id": 45453,
+        },
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "Vlogger does not exist"
+
+
+async def test_patch_vlogs_endpoint_invalid_country(vlog, client, admin_token):
+    response = await client.patch(
+        f"/api/v1/vlogs/{vlog.id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={
+            "country_id": 142,
+        },
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "Country does not exist"
+
+
+async def test_patch_vloggers_endpoint_invalid_type(vlog, client, admin_token):
+    response = await client.patch(
+        f"/api/v1/vlogs/{vlog.id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
+        json={"vlogger_id": "vlogger", "country_id": "country"},
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
