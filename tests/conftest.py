@@ -272,3 +272,43 @@ async def vlog(vlogger, country, db_session) -> Vlog:
     db_session.add(vlog)
     await db_session.commit()
     return vlog
+
+
+@pytest.fixture()
+async def vlogs_factory(db_session, vloggers_factory, countries_factory):
+    """
+    Create multiple vlog instances using db_session and return it.
+    """
+
+    import random
+    import string
+    from datetime import datetime, timezone
+
+    def random_video_id(length: int = 11):
+        return "".join(random.choices(string.ascii_letters + string.digits, k=length))
+
+    async def _create_vlogs(instances: int = 15) -> list[Vlog]:
+        vloggers = await vloggers_factory(instances=instances)
+        countries = await countries_factory(instances=instances)
+
+        vlogs_list = []
+        for i in range(instances):
+            vlog = Vlog(
+                vlogger_id=vloggers[i].id,
+                country_id=countries[i].id,
+                youtube_video_id=random_video_id(),
+                published_at=datetime.now(timezone.utc),
+                title=f"title_{i}",
+                thumbnail_url=f"thumbnail_{i}",
+            )
+            db_session.add(vlog)
+            vlogs_list.append(vlog)
+
+        await db_session.commit()
+
+        for vlog in vlogs_list:
+            await db_session.refresh(vlog)
+
+        return vlogs_list
+
+    return _create_vlogs
