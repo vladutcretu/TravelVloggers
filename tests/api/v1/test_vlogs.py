@@ -1,4 +1,7 @@
 from fastapi import status
+from sqlalchemy import select
+
+from app.models.vlog import Vlog
 
 
 # Endpoint GET /api/v1/vlogs/countries/
@@ -628,7 +631,7 @@ async def test_patch_vlogs_endpoint_invalid_country(vlog, client, admin_token):
     assert response.json()["detail"] == "Country does not exist"
 
 
-async def test_patch_vloggers_endpoint_invalid_type(vlog, client, admin_token):
+async def test_patch_vlogs_endpoint_invalid_type(vlog, client, admin_token):
     response = await client.patch(
         f"/api/v1/vlogs/{vlog.id}",
         headers={"Authorization": f"Bearer {admin_token}"},
@@ -636,3 +639,52 @@ async def test_patch_vloggers_endpoint_invalid_type(vlog, client, admin_token):
     )
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+# Endpoint DELETE /api/v1/vlogs/{vlogs_id}
+async def test_delete_vlogs_endpoint_success(vlog, client, admin_token, db_session):
+    assert vlog.id
+
+    response = await client.delete(
+        f"/api/v1/vlogs/{vlog.id}",
+        headers={"Authorization": f"Bearer {admin_token}"},
+    )
+
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+
+    result = await db_session.execute(select(Vlog).where(Vlog.id == vlog.id))
+    deleted_vlog = result.scalar_one_or_none()
+    assert deleted_vlog is None
+
+
+async def test_delete_vlogs_endpoint_without_access(vlog, client, user_token):
+    assert vlog.id
+
+    response = await client.delete(
+        f"/api/v1/vlogs/{vlog.id}",
+        headers={"Authorization": f"Bearer {user_token}"},
+    )
+
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == "Not authorized"
+    assert vlog.id
+
+
+async def test_delete_vlogs_endpoint_without_token(vlog, client):
+    assert vlog.id
+
+    response = await client.delete(
+        f"/api/v1/vlogs/{vlog.id}", headers={"Authorization": "Bearer "}
+    )
+
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json()["detail"] == "Not authenticated"
+
+
+async def test_delete_vlogs_endpoint_invalid_vlog(client, admin_token):
+    response = await client.delete(
+        "/api/v1/vlogs/24342", headers={"Authorization": f"Bearer {admin_token}"}
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "Vlog does not exist"
