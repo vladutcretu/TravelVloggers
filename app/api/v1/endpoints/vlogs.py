@@ -120,3 +120,23 @@ async def update_vlog(
         )
 
     return updated_vlog
+
+
+@router.delete("/{vlog_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_vlog(vlog_id: int, current_user: CurrentUser, db: DatabaseSession):
+    if not current_user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized"
+        )
+
+    repository = VlogsRepository(db)
+    service = VlogsService(repository)
+
+    try:
+        vlog = await service.get_vlog_by_id(vlog_id)
+    except VlogDoesntExistError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Vlog does not exist"
+        )
+
+    return await service.delete_vlog(vlog)
