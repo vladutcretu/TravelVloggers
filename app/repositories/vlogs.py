@@ -63,3 +63,13 @@ class VlogsRepository:
             raise e
 
         return new_vlog
+
+    async def get_vlog_by_id(self, vlog_id: int) -> Vlog | None:
+        result = await self.db.execute(select(Vlog).where(Vlog.id == vlog_id))
+        vlog = result.scalars().first()
+        return vlog
+
+    async def update_vlog(self, vlog: Vlog) -> Vlog:
+        await self.db.commit()
+        await self.db.refresh(vlog)
+        return vlog

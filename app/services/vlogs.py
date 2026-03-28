@@ -1,12 +1,13 @@
 from app.repositories.vlogs import VlogsRepository
 from app.models.vlog import Country, Vlog
-from app.schemas.vlog import VlogCreate
+from app.schemas.vlog import VlogCreate, VlogUpdate
 from app.clients.youtube import YoutubeClient
 from app.core.exceptions import (
     VideoIdAlreadyExistsError,
     VloggerDoesntExistError,
     CountryDoesntExistError,
     YoutubeDataNotFoundError,
+    VlogDoesntExistError,
 )
 
 
@@ -63,3 +64,15 @@ class VlogsService:
 
         # 4. create object
         return await self.repository.create_vlog(new_vlog)
+
+    async def get_vlog_by_id(self, vlog_id: int) -> Vlog:
+        vlog = await self.repository.get_vlog_by_id(vlog_id)
+        if vlog is None:
+            raise VlogDoesntExistError()
+        return vlog
+
+    async def update_vlog(self, vlog: Vlog, vlog_data: VlogUpdate) -> Vlog:
+        updated_data = vlog_data.model_dump(exclude_unset=True)
+        for field, value in updated_data.items():
+            setattr(vlog, field, value)
+        return await self.repository.update_vlog(vlog)

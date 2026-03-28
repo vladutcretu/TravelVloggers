@@ -32,3 +32,7 @@ class CountryDoesntExistError(Exception):
 
 class YoutubeDataNotFoundError(Exception):
     pass
+
+
+class VlogDoesntExistError(Exception):
+    pass

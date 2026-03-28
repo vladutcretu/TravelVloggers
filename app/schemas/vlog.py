@@ -43,3 +43,8 @@ class VlogResponse(VlogBase, VlogYouTubeVideoData):
     youtube_video_url: str
     id: int
     created_at: datetime
+
+
+class VlogUpdate(BaseModel):
+    vlogger_id: int | None = None
+    country_id: int | None = None
