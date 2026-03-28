@@ -72,6 +72,16 @@ class VlogsService:
         return vlog
 
     async def update_vlog(self, vlog: Vlog, vlog_data: VlogUpdate) -> Vlog:
+        if vlog_data.vlogger_id:
+            existing_vlogger = await self.repository.get_vlogger_by_id(vlog_data.vlogger_id)
+            if existing_vlogger is None:
+                raise VloggerDoesntExistError()
+
+        if vlog_data.country_id:
+            existing_country = await self.repository.get_country_by_id(vlog_data.country_id)
+            if existing_country is None:
+                raise CountryDoesntExistError()
+        
         updated_data = vlog_data.model_dump(exclude_unset=True)
         for field, value in updated_data.items():
             setattr(vlog, field, value)

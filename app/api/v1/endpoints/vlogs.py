@@ -106,5 +106,17 @@ async def update_vlog(
             status_code=status.HTTP_404_NOT_FOUND, detail="Vlog does not exist"
         )
 
-    updated_vlog = await service.update_vlog(vlog, vlog_data)
+    try:
+        updated_vlog = await service.update_vlog(vlog, vlog_data)
+    except VloggerDoesntExistError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Vlogger does not exist",
+        )
+    except CountryDoesntExistError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Country does not exist",
+        )
+
     return updated_vlog
