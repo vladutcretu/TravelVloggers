@@ -6,6 +6,7 @@ from app.schemas.vlog import (
     VlogResponse,
     VlogCreate,
     VlogUpdate,
+    VlogResponsePaginated,
 )
 from app.api.dependencies import DatabaseSession, PaginationParams, CurrentUser
 from app.repositories.vlogs import VlogsRepository
@@ -140,3 +141,20 @@ async def delete_vlog(vlog_id: int, current_user: CurrentUser, db: DatabaseSessi
         )
 
     return await service.delete_vlog(vlog)
+
+
+@router.get("", response_model=VlogResponsePaginated, status_code=status.HTTP_200_OK)
+async def get_vlogs(db: DatabaseSession, pagination: PaginationParams):
+    repository = VlogsRepository(db)
+    service = VlogsService(repository)
+
+    vlogs, has_more = await service.get_vlogs(
+        pagination.skip, pagination.limit, pagination.order
+    )
+
+    return VlogResponsePaginated(
+        vlogs=[VlogResponse.model_validate(vlog) for vlog in vlogs],
+        skip=pagination.skip,
+        limit=pagination.limit,
+        has_more=has_more,
+    )

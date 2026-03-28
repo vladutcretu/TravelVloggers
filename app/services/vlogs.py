@@ -93,3 +93,11 @@ class VlogsService:
 
     async def delete_vlog(self, vlog: Vlog) -> None:
         return await self.repository.delete_vlog(vlog)
+
+    async def get_vlogs(
+        self, skip: int, limit: int, order: str
+    ) -> tuple[list[Vlog], bool]:
+        vlogs = await self.repository.get_vlogs(skip, limit + 1, order)
+        has_more = len(vlogs) > limit
+        vlogs = vlogs[:limit]
+        return vlogs, has_more

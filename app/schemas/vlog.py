@@ -48,3 +48,10 @@ class VlogResponse(VlogBase, VlogYouTubeVideoData):
 class VlogUpdate(BaseModel):
     vlogger_id: int | None = None
     country_id: int | None = None
+
+
+class VlogResponsePaginated(BaseModel):
+    vlogs: list[VlogResponse]
+    skip: int
+    limit: int
+    has_more: bool
