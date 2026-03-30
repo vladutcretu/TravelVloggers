@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import selectinload
 
 from app.models.vlog import Country, Vlog
 from app.models.vlogger import Vlogger
@@ -84,6 +85,21 @@ class VlogsRepository:
 
         result = await self.db.execute(
             select(Vlog).order_by(order_by).offset(skip).limit(limit)
+        )
+        vlogs = list(result.scalars().all())
+        return vlogs
+
+    async def get_vlogs_by_country_id(
+        self, country_id: int, skip: int, limit: int, order: str
+    ) -> list[Vlog]:
+        order_by = Vlog.created_at.asc() if order == "asc" else Vlog.created_at.desc()
+        result = await self.db.execute(
+            select(Vlog)
+            .options(selectinload(Vlog.country))
+            .where(Vlog.country_id == country_id)
+            .order_by(order_by)
+            .offset(skip)
+            .limit(limit)
         )
         vlogs = list(result.scalars().all())
         return vlogs

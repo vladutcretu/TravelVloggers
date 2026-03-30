@@ -101,3 +101,17 @@ class VlogsService:
         has_more = len(vlogs) > limit
         vlogs = vlogs[:limit]
         return vlogs, has_more
+
+    async def get_vlogs_by_country_id(
+        self, country_id: int, skip: int, limit: int, order: str
+    ) -> tuple[Country, list[Vlog], bool]:
+        country = await self.repository.get_country_by_id(country_id)
+        if country is None:
+            raise CountryDoesntExistError()
+
+        vlogs = await self.repository.get_vlogs_by_country_id(
+            country_id, skip, limit + 1, order
+        )
+        has_more = len(vlogs) > limit
+        vlogs = vlogs[:limit]
+        return country, vlogs, has_more
