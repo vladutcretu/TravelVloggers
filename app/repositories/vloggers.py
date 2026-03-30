@@ -1,8 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
 from app.models.vlogger import Vlogger
+from app.models.vlog import Vlog
 from app.core.exceptions import VloggerAlreadyExistsError
 
 
@@ -55,3 +57,18 @@ class VloggersRepository:
         )
         vloggers = list(result.scalars().all())
         return vloggers
+
+    async def get_vlogs_by_vlogger_id(
+        self, vlogger_id: int, skip: int, limit: int, order: str
+    ) -> list[Vlog]:
+        order_by = Vlog.created_at.asc() if order == "asc" else Vlog.created_at.desc()
+        result = await self.db.execute(
+            select(Vlog)
+            .options(selectinload(Vlog.vlogger))
+            .where(Vlog.vlogger_id == vlogger_id)
+            .order_by(order_by)
+            .offset(skip)
+            .limit(limit)
+        )
+        vlogs = list(result.scalars().all())
+        return vlogs

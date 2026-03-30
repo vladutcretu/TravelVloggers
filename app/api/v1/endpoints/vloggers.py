@@ -5,7 +5,9 @@ from app.schemas.vlogger import (
     VloggerCreate,
     VloggerUpdate,
     VloggerResponsePaginated,
+    VloggerVlogsResponsePaginated,
 )
+from app.schemas.vlog import VlogResponse
 from app.api.dependencies import CurrentUser, DatabaseSession, PaginationParams
 from app.repositories.vloggers import VloggersRepository, VloggerAlreadyExistsError
 from app.services.vloggers import VloggersService, VloggerDoesntExistError
@@ -118,3 +120,37 @@ async def get_vlogger(vlogger_id: int, db: DatabaseSession):
         )
 
     return vlogger
+
+
+@router.get(
+    "/{vlogger_id}/vlogs",
+    response_model=VloggerVlogsResponsePaginated,
+    status_code=status.HTTP_200_OK,
+)
+async def get_vlogs_by_vlogger(
+    vlogger_id: int, db: DatabaseSession, pagination: PaginationParams
+):
+    repository = VloggersRepository(db)
+    service = VloggersService(repository)
+
+    try:
+        vlogger, vlogs, has_more = await service.get_vlogs_by_vlogger_id(
+            vlogger_id, pagination.skip, pagination.limit, pagination.order
+        )
+    except VloggerDoesntExistError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Vlogger does not exist"
+        )
+
+    return VloggerVlogsResponsePaginated(
+        youtube_channel_id=vlogger.youtube_channel_id,
+        youtube_channel_name=vlogger.youtube_channel_name,
+        youtube_channel_url=vlogger.youtube_channel_url,
+        youtube_avatar_url=vlogger.youtube_avatar_url,
+        id=vlogger.id,
+        created_at=vlogger.created_at,
+        vlogs=[VlogResponse.model_validate(vlog) for vlog in vlogs],
+        skip=pagination.skip,
+        limit=pagination.limit,
+        has_more=has_more,
+    )
