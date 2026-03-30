@@ -7,6 +7,7 @@ from app.schemas.vlog import (
     VlogCreate,
     VlogUpdate,
     VlogResponsePaginated,
+    CountryVlogsResponsePaginated,
 )
 from app.api.dependencies import DatabaseSession, PaginationParams, CurrentUser
 from app.repositories.vlogs import VlogsRepository
@@ -173,3 +174,34 @@ async def get_vlog(vlog_id: int, db: DatabaseSession):
         )
 
     return vlog
+
+
+@router.get(
+    "/country/{country_id}",
+    response_model=CountryVlogsResponsePaginated,
+    status_code=status.HTTP_200_OK,
+)
+async def get_vlogs_by_country(
+    country_id: int, db: DatabaseSession, pagination: PaginationParams
+):
+    repository = VlogsRepository(db)
+    service = VlogsService(repository)
+
+    try:
+        country, vlogs, has_more = await service.get_vlogs_by_country_id(
+            country_id, pagination.skip, pagination.limit, pagination.order
+        )
+    except CountryDoesntExistError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Country does not exist"
+        )
+
+    return CountryVlogsResponsePaginated(
+        id=country.id,
+        name=country.name,
+        iso_code=country.iso_code,
+        vlogs=[VlogResponse.model_validate(vlog) for vlog in vlogs],
+        skip=pagination.skip,
+        limit=pagination.limit,
+        has_more=has_more,
+    )

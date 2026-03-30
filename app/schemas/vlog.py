@@ -55,3 +55,7 @@ class VlogResponsePaginated(BaseModel):
     skip: int
     limit: int
     has_more: bool
+
+
+class CountryVlogsResponsePaginated(VlogResponsePaginated, CountryResponse):
+    pass
