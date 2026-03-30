@@ -939,7 +939,9 @@ async def test_get_vlogs_by_country_endpoint_without_more(
     assert vlogs[0].country_id == country.id
     assert vlogs[pagination.limit - 1].country_id == country.id
 
-    response = await client.get(f"/api/v1/vlogs/country/{country.id}")
+    response = await client.get(
+        f"/api/v1/vlogs/country/{country.id}?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
 
     assert response.status_code == status.HTTP_200_OK
 
@@ -971,14 +973,16 @@ async def test_get_vlogs_by_country_endpoint_without_more(
 async def test_get_vlogs_by_country_endpoint_with_more(
     vlogs_factory, pagination, country, client
 ):
-    vlogs = await vlogs_factory(instances=pagination.limit)
+    vlogs = await vlogs_factory(instances=pagination.limit + 1)
     for vlog in vlogs:
         vlog.country_id = country.id
 
     assert vlogs[0].country_id == country.id
     assert vlogs[pagination.limit - 1].country_id == country.id
 
-    response = await client.get(f"/api/v1/vlogs/country/{country.id}")
+    response = await client.get(
+        f"/api/v1/vlogs/country/{country.id}?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
 
     assert response.status_code == status.HTTP_200_OK
 
@@ -1004,7 +1008,7 @@ async def test_get_vlogs_by_country_endpoint_with_more(
 
     assert data["skip"] == pagination.skip
     assert data["limit"] == pagination.limit
-    assert data["has_more"] is False
+    assert data["has_more"] is True
 
 
 async def test_get_vlogs_by_country_endpoint_with_skip(
@@ -1135,7 +1139,7 @@ async def test_get_vlogs_by_country_endpoint_with_invalid_country(
     await vlogs_factory(instances=pagination.limit)
 
     response = await client.get(
-        f"/api/v1/vlogs/country/{pagination.limit + 1}?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+        f"/api/v1/vlogs/country/153?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
     )
 
     assert response.status_code == status.HTTP_404_NOT_FOUND
