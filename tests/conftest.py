@@ -245,7 +245,7 @@ async def country(db_session) -> Country:
     """
     country = Country(
         name="test_name",
-        iso_code="tn",
+        iso_code="TN",
     )
     db_session.add(country)
     await db_session.commit()

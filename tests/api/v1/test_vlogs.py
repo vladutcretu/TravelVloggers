@@ -926,3 +926,291 @@ async def test_get_vlog_endpoint_invalid_type(client):
     response = await client.get("/api/v1/vlogs/my-vlog")
 
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+# Endpoint GET /api/v1/vlogs/country/{country_id}
+async def test_get_vlogs_by_country_endpoint_without_more(
+    vlogs_factory, pagination, country, client
+):
+    vlogs = await vlogs_factory(instances=pagination.limit)
+    for vlog in vlogs:
+        vlog.country_id = country.id
+
+    assert vlogs[0].country_id == country.id
+    assert vlogs[pagination.limit - 1].country_id == country.id
+
+    response = await client.get(f"/api/v1/vlogs/country/{country.id}")
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert len(data) == 7  # id, name, iso_code (Country item) + Vlog items + 3 params
+    assert len(data["vlogs"]) == min(len(vlogs), pagination.limit)
+
+    assert data["id"] == country.id
+    assert data["name"] == country.name
+    assert data["iso_code"] == country.iso_code
+
+    item = data["vlogs"][0]
+    assert item["vlogger_id"] == vlogs[0].vlogger_id
+    assert item["country_id"] == country.id
+    assert item["youtube_video_id"] == vlogs[0].youtube_video_id
+    assert item["youtube_video_url"] == vlogs[0].youtube_video_url
+    assert "published_at" in item
+    assert item["title"] == "title_0"
+    assert item["thumbnail_url"] == "thumbnail_0"
+    assert item["language"] is None
+    assert "id" in item
+    assert "created_at" in item
+
+    assert data["skip"] == pagination.skip
+    assert data["limit"] == pagination.limit
+    assert data["has_more"] is False
+
+
+async def test_get_vlogs_by_country_endpoint_with_more(
+    vlogs_factory, pagination, country, client
+):
+    vlogs = await vlogs_factory(instances=pagination.limit)
+    for vlog in vlogs:
+        vlog.country_id = country.id
+
+    assert vlogs[0].country_id == country.id
+    assert vlogs[pagination.limit - 1].country_id == country.id
+
+    response = await client.get(f"/api/v1/vlogs/country/{country.id}")
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert len(data) == 7  # id, name, iso_code (Country item) + Vlog items + 3 params
+    assert len(data["vlogs"]) == min(len(vlogs), pagination.limit)
+
+    assert data["id"] == country.id
+    assert data["name"] == country.name
+    assert data["iso_code"] == country.iso_code
+
+    item = data["vlogs"][0]
+    assert item["vlogger_id"] == vlogs[0].vlogger_id
+    assert item["country_id"] == country.id
+    assert item["youtube_video_id"] == vlogs[0].youtube_video_id
+    assert item["youtube_video_url"] == vlogs[0].youtube_video_url
+    assert "published_at" in item
+    assert item["title"] == "title_0"
+    assert item["thumbnail_url"] == "thumbnail_0"
+    assert item["language"] is None
+    assert "id" in item
+    assert "created_at" in item
+
+    assert data["skip"] == pagination.skip
+    assert data["limit"] == pagination.limit
+    assert data["has_more"] is False
+
+
+async def test_get_vlogs_by_country_endpoint_with_skip(
+    vlogs_factory, pagination, country, client
+):
+    vlogs = await vlogs_factory(instances=pagination.limit)
+    for vlog in vlogs:
+        vlog.country_id = country.id
+
+    assert vlogs[0].country_id == country.id
+    assert vlogs[pagination.limit - 1].country_id == country.id
+
+    pagination.skip = 1
+
+    response = await client.get(
+        f"/api/v1/vlogs/country/{country.id}?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert data["id"] == country.id
+    assert data["name"] == country.name
+    assert data["iso_code"] == country.iso_code
+
+    total_vlogs = len(vlogs)
+    expected_count = max(0, total_vlogs - 1)  # skip = 1
+    returned_count = len(data["vlogs"])
+
+    assert returned_count == expected_count
+
+    first_returned_vlog = data["vlogs"][0]
+    second_vlog = vlogs[1]
+
+    assert first_returned_vlog["id"] == second_vlog.id
+    assert first_returned_vlog["youtube_video_id"] == second_vlog.youtube_video_id
+
+    assert data["skip"] == 1
+    assert data["limit"] == pagination.limit
+    assert data["has_more"] is False
+
+
+async def test_get_vlogs_by_country_endpoint_with_limit(
+    vlogs_factory, pagination, country, client
+):
+    vlogs = await vlogs_factory(instances=pagination.limit)
+    for vlog in vlogs:
+        vlog.country_id = country.id
+
+    assert vlogs[0].country_id == country.id
+    assert vlogs[pagination.limit - 1].country_id == country.id
+
+    pagination.limit = 2
+
+    response = await client.get(
+        f"/api/v1/vlogs/country/{country.id}?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert len(data["vlogs"]) == min(len(vlogs), pagination.limit)
+
+
+async def test_get_vlogs_by_country_endpoint_with_order_asc(
+    vlogs_factory, pagination, country, client
+):
+    vlogs = await vlogs_factory(instances=pagination.limit)
+    for vlog in vlogs:
+        vlog.country_id = country.id
+
+    assert vlogs[0].country_id == country.id
+    assert vlogs[pagination.limit - 1].country_id == country.id
+
+    pagination.order = "asc"
+
+    response = await client.get(
+        f"/api/v1/vlogs/country/{country.id}?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert len(data["vlogs"]) == min(len(vlogs), pagination.limit)
+
+    vlogs_sorted_desc = sorted(vlogs, key=lambda vlog: vlog.created_at, reverse=False)
+    first_returned_vlog = data["vlogs"][0]
+    first_created_vlog = vlogs_sorted_desc[0]
+
+    assert first_returned_vlog["id"] == first_created_vlog.id
+    assert (
+        first_returned_vlog["youtube_video_id"] == first_created_vlog.youtube_video_id
+    )
+
+
+async def test_get_vlogs_by_country_endpoint_with_order_desc(
+    vlogs_factory, pagination, country, client
+):
+    vlogs = await vlogs_factory(instances=pagination.limit)
+    for vlog in vlogs:
+        vlog.country_id = country.id
+
+    assert vlogs[0].country_id == country.id
+    assert vlogs[pagination.limit - 1].country_id == country.id
+
+    pagination.order = "desc"
+
+    response = await client.get(
+        f"/api/v1/vlogs/country/{country.id}?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert len(data["vlogs"]) == min(len(vlogs), pagination.limit)
+
+    vlogs_sorted_desc = sorted(vlogs, key=lambda vlog: vlog.created_at, reverse=True)
+    first_returned_vlog = data["vlogs"][0]
+    last_created_vlog = vlogs_sorted_desc[0]
+
+    assert first_returned_vlog["id"] == last_created_vlog.id
+    assert first_returned_vlog["youtube_video_id"] == last_created_vlog.youtube_video_id
+
+
+async def test_get_vlogs_by_country_endpoint_with_invalid_country(
+    vlogs_factory, pagination, client
+):
+    await vlogs_factory(instances=pagination.limit)
+
+    response = await client.get(
+        f"/api/v1/vlogs/country/{pagination.limit + 1}?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "Country does not exist"
+
+
+async def test_get_vlogs_by_country_endpoint_with_invalid_country_type(
+    vlogs_factory, pagination, client
+):
+    await vlogs_factory(instances=pagination.limit)
+
+    response = await client.get(
+        f"/api/v1/vlogs/country/USA?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+async def test_get_vlogs_by_country_endpoint_with_skip_invalid(
+    vlogs_factory, pagination, country, client
+):
+    await vlogs_factory(instances=pagination.limit)
+
+    pagination.skip = -1
+
+    response = await client.get(
+        f"/api/v1/vlogs/country/{country.id}?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+async def test_get_vlogs_by_country_endpoint_with_limit_invalid(
+    vlogs_factory, pagination, country, client
+):
+    await vlogs_factory(instances=pagination.limit)
+
+    pagination.limit = -10
+
+    response = await client.get(
+        f"/api/v1/vlogs/country/{country.id}?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+async def test_get_vlogs_by_country_endpoint_with_order_invalid(
+    vlogs_factory, pagination, country, client
+):
+    await vlogs_factory(instances=pagination.limit)
+
+    pagination.order = "alpha"
+
+    response = await client.get(
+        f"/api/v1/vlogs/country/{country.id}?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
+
+
+async def test_get_vlogs_by_country_endpoint_with_no_vlogs(pagination, country, client):
+    response = await client.get(
+        f"/api/v1/vlogs/country/{country.id}?skip={pagination.skip}&limit={pagination.limit}&order={pagination.order}"
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert len(data) == 7
+    assert len(data["vlogs"]) == 0
+
+    assert data["id"] == country.id
+    assert data["name"] == country.name
+    assert data["iso_code"] == country.iso_code
+
+    assert data["skip"] == pagination.skip
+    assert data["limit"] == pagination.limit
+    assert data["has_more"] is False
