@@ -1,6 +1,7 @@
 from app.repositories.vloggers import VloggersRepository
 from app.schemas.vlogger import VloggerCreate, VloggerUpdate
 from app.models.vlogger import Vlogger
+from app.models.vlog import Vlog
 from app.core.exceptions import VloggerDoesntExistError
 
 
@@ -35,3 +36,17 @@ class VloggersService:
         has_more = len(vloggers) > limit
         vloggers = vloggers[:limit]
         return vloggers, has_more
+
+    async def get_vlogs_by_vlogger_id(
+        self, vlogger_id: int, skip: int, limit: int, order: str
+    ) -> tuple[Vlogger, list[Vlog], bool]:
+        vlogger = await self.repository.get_vlogger_by_id(vlogger_id)
+        if vlogger is None:
+            raise VloggerDoesntExistError()
+
+        vlogs = await self.repository.get_vlogs_by_vlogger_id(
+            vlogger_id, skip, limit + 1, order
+        )
+        has_more = len(vlogs) > limit
+        vlogs = vlogs[:limit]
+        return vlogger, vlogs, has_more

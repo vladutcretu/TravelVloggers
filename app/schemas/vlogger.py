@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel, Field, ConfigDict
+from app.schemas.vlog import VlogResponsePaginated
 
 
 class VloggerBase(BaseModel):
@@ -32,3 +33,7 @@ class VloggerResponsePaginated(BaseModel):
     skip: int
     limit: int
     has_more: bool
+
+
+class VloggerVlogsResponsePaginated(VlogResponsePaginated, VloggerResponse):
+    pass
