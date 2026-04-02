@@ -1,6 +1,6 @@
 [project]
 name = "TravelVloggers"
-version = "0.1.0"
+version = "1.0.0"
 description = "Backend API that aggregates travel-related video content posted on YouTube"
 readme = "README.md"
 requires-python = ">=3.11"

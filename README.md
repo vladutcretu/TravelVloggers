@@ -10,20 +10,20 @@ TravelVloggers is a backend API that aggregates travel-related video content pos
 ## Technology Stack
 - ⚙️ Backend: [FastAPI](https://fastapi.tiangolo.com) with
     - 🧰 [SQLAlchemy](https://www.sqlalchemy.org) for database interactions.
-
+    - ✅ [Pydantic](https://docs.pydantic.dev/latest/) for data validation.
+    - 🐛 [pytest](https://docs.pytest.org/en/stable/) for writing tests.
 - 💾 Database: [PostgreSQL](https://www.postgresql.org/).
 - 🧩Other tools and libraries:
     - 🗓️ [Trello](https://trello.com/b/GufG4LeA/travelvloggers) for planning work.
-    - 💼 [uv](https://docs.astral.sh/uv/) as the Python package and project manager.
-    - 🧶 [Ruff](https://docs.astral.sh/ruff/) for linting and code formatting.
-    - 🐋 [Docker](https://www.docker.com/) for local development.
+    - 🐋 [Docker](https://www.docker.com/) for containerization.
+    - 💼 [uv](https://docs.astral.sh/uv/) as the Python package and project manager; see [pyproject.toml](pyproject.toml) for all dependencies.
 
 
 ## Features
 The API is designed to evolve through versioned endpoints.
 In version v1.0.0 the platform manually curates travel vloggers and their videos, while version v2.0.0 introduces a subscription-based upload system for vloggers who wish to manage their own content. 
 
-For v1.0.0 (currently planned and under development) the main technical objectives are:
+For v1.0.0 (fully developed) the main technical objectives were:
 - Administrators can manage vloggers profiles and link vlogs to their profiles.
 - Integrate YouTube Data API v3 to fetch video metadata such as title, thumbnail, publish date, language.
 - Import countries/cities from a reliable external dataset (e.g. GeoNames) to populate database.

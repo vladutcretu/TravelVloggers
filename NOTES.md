@@ -24,8 +24,8 @@ Administrators can:
 - Update or delete vlog entries.
 
 Visitors can:
-- View the most recently added vloggers and a single vlogger's profile, where they can filter the vlogs by the country they were filmed in.
-- View the most recenlty added vlogs, a single vlog details, and filter all vlogs by the country they were filmed in.
+- View the most recently added vloggers and a single vlogger's profile, where they can see its vlogs.
+- View the most recently added vlogs, a single vlog details, and filter all vlogs by the country they were filmed in.
 - View all available countries so users know which locations can be used for filtering.
 
 #### Database design
@@ -33,7 +33,7 @@ Visitors can:
 
 ```SQL 
 Table users {
-  id id [primary key]
+  id int [primary key]
   email email [unique, not null]
   password_hash str [not null]
   is_admin bool [not null]
@@ -42,29 +42,29 @@ Table users {
 }
 
 Table vloggers {
-  id id [primary key]
+  id int [primary key]
   youtube_channel_id varchar(255) [unique, not null]
   youtube_channel_name varchar(255) [unique, not null]
   youtube_channel_link varchar(255) [unique, not null]
-  avatar_url varchar(255) [not null]
+  youtube_avatar_url varchar(255) [not null]
   created_at datetime [not null]
 }
 
 Table countries {
-  id id [primary key]
-  name varchar(255) [not null]
-  iso_code varchar(3) [not null]
+  id int [primary key]
+  name varchar(255) [unique, not null]
+  iso_code varchar(2) [unique, not null]
 }
 
 Table vlogs {
-  id id [primary key]
+  id int [primary key]
   vlogger_id varchar(255) [ref: > vloggers.id, not null]
+  country_id varchar(255) [ref: > countries.id, not null]
   youtube_video_id varchar(255) [unique, not null]
+  published_at varchar(255) [not null]
   title varchar(255) [not null]
   thumbnail_url varchar(255) [not null]
-  published_at varchar(255) [not null]
-  youtube_video_link varchar(255) [not null]
-  country_id varchar(255) [ref: > countries.id, not null]
+  language varchar(2) [null]
   created_at datetime [not null]
 }
 ```
@@ -97,7 +97,7 @@ Table vlogs {
     - Body: 
         ```json
         { 
-            "email": "string", 
+            "email": "EmailStr", 
             "password": "string"
         }
         ```
@@ -107,10 +107,21 @@ Table vlogs {
     - Response: 200 OK
         ```json
         {
-            "access_token": ...,
-            "token_type": bearer
+            "access_token": "string",
+            "token_type": "bearer"
         }
 
+- `POST /api/v1/auth/me`
+    - Behavior: does not request a body but requires a valid Bearer token in the Authorization header
+    - Response: 200 OK
+        ```json
+            {
+            "id": int,
+            "email": "EmailStr",
+            "is_admin": bool,
+            "is_superuser": bool
+            }
+        ```
 <b>User Management - Private endpoints</b>
 
 - `GET /api/v1/users`
@@ -157,9 +168,10 @@ Table vlogs {
     - Body: 
         ```json
         { 
-            "youtube_channel_id": "string", 
+            "youtube_channel_id": "string",
             "youtube_channel_name": "string",
-            "avatar_url": "string"
+            "youtube_channel_url": "string",
+            "youtube_avatar_url": "string"
         }
         ```
     - Rules: 
@@ -169,9 +181,10 @@ Table vlogs {
         ```json
         {
             "id": int,
-            "youtube_channel_id": "string", 
+            "youtube_channel_id": "string",
             "youtube_channel_name": "string",
-            "avatar_url": "string"
+            "youtube_channel_url": "string",
+            "youtube_avatar_url": "string",
             "created_at": datetime
         }
         ```
@@ -181,7 +194,8 @@ Table vlogs {
         ```json
         { 
             "youtube_channel_name": "string",
-            "avatar_url": "string"
+            "youtube_channel_url": "string",
+            "youtube_avatar_url": "string"
         }
         ```
     - Rules: only user.is_admin == True can update vlogger entry
@@ -189,9 +203,10 @@ Table vlogs {
         ```json
         {
             "id": int,
-            "youtube_channel_id": "string", 
+            "youtube_channel_id": "string",
             "youtube_channel_name": "string",
-            "avatar_url": "string"
+            "youtube_channel_url": "string",
+            "youtube_avatar_url": "string",
             "created_at": datetime
         }
         ```
@@ -202,21 +217,23 @@ Table vlogs {
 
 <b>Vlogger - Public endpoints</b>
 
-- `GET /api/v1/vloggers` (query params for pagination, sorting and filtering: ?skip=&limit=&order=asc/desc by created_at)
+- `GET /api/v1/vloggers` (query params for pagination and sorting: ?skip=&limit=&order=asc/desc by created_at)
     - Response: 200 OK
         ```json
         {
             "vloggers": [
                 {
                     "id": int,
-                    "youtube_channel_id": "string", 
+                    "youtube_channel_id": "string",
                     "youtube_channel_name": "string",
-                    "avatar_url": "string",
-                    "video_count": 87,
-                    "countries_count": 52,
-                    "created_at": datetime
+                    "youtube_channel_url": "string",
+                    "youtube_avatar_url": "string",
+                    "created_at": datetime,
                 },
-            ]
+            ],
+            "skip": int,
+            "limit": int,
+            "has_more": bool
         }
         ```
 
@@ -225,18 +242,45 @@ Table vlogs {
         ```json
         {
             "id": int,
-            "youtube_channel_id": "string", 
+            "youtube_channel_id": "string",
             "youtube_channel_name": "string",
-            "avatar_url": "string",
-            "video_count": 87,
-            "countries_count": 52,
-            "created_at": datetime
+            "youtube_channel_url": "string",
+            "youtube_avatar_url": "string",
+            "created_at": datetime,
+        }
+        ```
+
+- `GET /api/v1/vloggers/{vlogger_id}/vlogs` (query params for pagination and sorting: ?skip=&limit=&order=asc/desc by created_at)
+    - Behavior: return all vlogs that have vlog.vlogger_id == vlogger_id
+    - Response: 200 OK
+        ```json
+        {
+            "id": int,
+            "youtube_channel_id": "string",
+            "youtube_channel_name": "string",
+            "youtube_channel_url": "string",
+            "youtube_avatar_url": "string",
+            "created_at": datetime,
+            "vlogs": [
+                {
+                    "id": int,
+                    "vlogger_id": int,
+                    "country_id": int,
+                    "youtube_video_id": "string",
+                    "youtube_video_url": "string",
+                    "published_at": datetime,
+                    "title": "string",
+                    "thumbnail_url": "string",
+                    "language": "string",
+                    "created_at": datetime
+                },
+            ]
         }
         ```
 
 <b>Country - Public endpoints</b>
 
-- `GET /api/v1/countries` (query params for pagination, sorting and filtering: ?skip=&limit=&order=asc/desc by created_at)
+- `GET /api/v1/countries` (query params for pagination and sorting: ?skip=&limit=&order=asc/desc by created_at)
     - Response: 200 OK
         ```json
         {
@@ -250,19 +294,25 @@ Table vlogs {
         }
         ```
 
-- `GET /api/v1/countries/{country_iso}/vlogs` (query params for pagination, sorting and filtering: ?skip=&limit=&order=asc/desc by created_at)
+- `GET /api/v1/countries/{country_iso}/vlogs` (query params for pagination and sorting: ?skip=&limit=&order=asc/desc by created_at)
+    - Behavior: return all vlogs that have vlog.vlogger_id == vlogger_id
     - Response: 200 OK
         ```json
         {
+            "id": int,
+            "name": "string",
+            "iso_code": "string",
             "vlogs": [
                 {
                     "id": int,
-                    "youtube_channel_name": "string",
-                    "thumbnail_url": "string",
+                    "vlogger_id": int,
+                    "country_id": int,
+                    "youtube_video_id": "string",
+                    "youtube_video_url": "string",
+                    "published_at": datetime,
                     "title": "string",
-                    "link": "string",
-                    "country_name": "string",
-                    "published_at": date,
+                    "thumbnail_url": "string",
+                    "language": "string",
                     "created_at": datetime
                 },
             ]
@@ -276,8 +326,8 @@ Table vlogs {
         ```json
         { 
             "vlogger_id": int,
-            "youtube_video_id": "string",
-            "country_iso": "string"
+            "country_id": int,
+            "youtube_video_id": "string"
         }
         ```
     - Rules: 
@@ -288,12 +338,13 @@ Table vlogs {
         {
             "id": int,
             "vlogger_id": int,
+            "country_id": int,
             "youtube_video_id": "string",
+            "youtube_video_url": "string",
+            "published_at": datetime,
             "title": "string",
             "thumbnail_url": "string",
-            "youtube_video_link": "string",
-            "published_at": date,
-            "country_name": "string",
+            "language": "string",
             "created_at": datetime
         }
         ```
@@ -311,12 +362,13 @@ Table vlogs {
         {
             "id": int,
             "vlogger_id": int,
+            "country_id": int,
             "youtube_video_id": "string",
+            "youtube_video_url": "string",
+            "published_at": datetime,
             "title": "string",
             "thumbnail_url": "string",
-            "youtube_video_link": "string",
-            "published_at": date,
-            "country_name": "string",
+            "language": "string",
             "created_at": datetime
         }
         ```
@@ -327,22 +379,27 @@ Table vlogs {
 
 <b>Vlog - Public endpoints</b>
 
-- `GET /api/v1/vlogs` (query params for pagination, sorting and filtering: ?skip=&limit=&order=asc/desc by created_at)
+- `GET /api/v1/vlogs` (query params for pagination and sorting: ?skip=&limit=&order=asc/desc by created_at)
     - Response: 200 OK
         ```json
         {
             "vlogs": [
                 {
                     "id": int,
-                    "youtube_channel_name": "string",
-                    "thumbnail_url": "string",
+                    "vlogger_id": int,
+                    "country_id": int,
+                    "youtube_video_id": "string",
+                    "youtube_video_url": "string",
+                    "published_at": datetime,
                     "title": "string",
-                    "link": "string",
-                    "country_name": "string",
-                    "published_at": date,
+                    "thumbnail_url": "string",
+                    "language": "string",
                     "created_at": datetime
                 },
-            ]
+            ],
+            "skip": int,
+            "limit": int,
+            "has_more": bool
         }
         ```
 
@@ -351,12 +408,14 @@ Table vlogs {
         ```json
         {
             "id": int,
-            "youtube_channel_name": "string",
-            "thumbnail_url": "string",
+            "vlogger_id": int,
+            "country_id": int,
+            "youtube_video_id": "string",
+            "youtube_video_url": "string",
+            "published_at": datetime,
             "title": "string",
-            "link": "string",
-            "country_name": "string",
-            "published_at": date,
+            "thumbnail_url": "string",
+            "language": "string",
             "created_at": datetime
         }
         ```
