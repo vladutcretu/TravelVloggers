@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, Query, HTTPException
 
-from app.schemas.vlog import (
+from app.schemas.v1.vlog import (
     CountryResponsePaginated,
     CountryResponse,
     VlogResponse,
@@ -10,9 +10,9 @@ from app.schemas.vlog import (
     CountryVlogsResponsePaginated,
 )
 from app.api.dependencies import DatabaseSession, PaginationParams, CurrentUser
-from app.repositories.vlogs import VlogsRepository
-from app.services.vlogs import VlogsService
-from app.clients.youtube import YoutubeClient
+from app.repositories.v1.vlogs import VlogsRepository
+from app.services.v1.vlogs import VlogsService
+from app.clients.v1.youtube import YoutubeClient
 from app.core.exceptions import (
     VideoIdAlreadyExistsError,
     VloggerDoesntExistError,

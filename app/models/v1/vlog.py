@@ -8,7 +8,7 @@ from pydantic import computed_field
 from app.db.connection import Base
 
 if TYPE_CHECKING:
-    from app.models.vlogger import Vlogger
+    from app.models.v1.vlogger import Vlogger
 
 
 class Country(Base):

@@ -1,7 +1,7 @@
 from fastapi import status
 from sqlalchemy import select
 
-from app.models.user import User
+from app.models.v1.user import User
 
 
 # Endpoint GET /api/v1/users

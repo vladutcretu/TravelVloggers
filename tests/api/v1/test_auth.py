@@ -3,7 +3,7 @@ import jwt
 from fastapi import status
 
 from app.core.config import settings
-from app.models.user import User
+from app.models.v1.user import User
 from app.core.security import hash_password
 
 

@@ -5,11 +5,11 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 
-from app.models.user import User
+from app.models.v1.user import User
 from app.db.connection import get_db
 from app.core.config import settings
-from app.repositories.auth import AuthRepository
-from app.services.auth import (
+from app.repositories.v1.auth import AuthRepository
+from app.services.v1.auth import (
     AuthService,
     AccessTokenInvalidError,
     UserDoesntExistError,

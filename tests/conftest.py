@@ -6,11 +6,11 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from app.core.config import settings
 from app.db.connection import Base, get_db
 from main import app
-from app.models.user import User
+from app.models.v1.user import User
 from app.core.security import create_access_token
-from app.models.vlogger import Vlogger
+from app.models.v1.vlogger import Vlogger
 from app.api.dependencies import Pagination, pagination_params
-from app.models.vlog import Country, Vlog
+from app.models.v1.vlog import Country, Vlog
 
 
 DB_TEST_URL = (

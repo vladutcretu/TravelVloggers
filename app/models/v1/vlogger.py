@@ -7,7 +7,7 @@ from sqlalchemy import String, DateTime, func
 from app.db.connection import Base
 
 if TYPE_CHECKING:
-    from app.models.vlog import Vlog
+    from app.models.v1.vlog import Vlog
 
 
 class Vlogger(Base):

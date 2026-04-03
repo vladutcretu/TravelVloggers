@@ -3,8 +3,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from app.models.vlogger import Vlogger
-from app.models.vlog import Vlog
+from app.models.v1.vlogger import Vlogger
+from app.models.v1.vlog import Vlog
 from app.core.exceptions import VloggerAlreadyExistsError
 
 

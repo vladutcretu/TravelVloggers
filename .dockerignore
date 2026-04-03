@@ -11,4 +11,5 @@ wheels/
 
 # Others
 .ruff_cache
+.pytest_cache
 .git

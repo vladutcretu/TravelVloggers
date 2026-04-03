@@ -1,6 +1,6 @@
-from app.repositories.users import UsersRepository
-from app.models.user import User
-from app.schemas.user import UserUpdate
+from app.repositories.v1.users import UsersRepository
+from app.models.v1.user import User
+from app.schemas.v1.user import UserUpdate
 from app.core.exceptions import UserDoesntExistError
 
 

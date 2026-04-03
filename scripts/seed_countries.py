@@ -7,7 +7,7 @@ import asyncio
 from sqlalchemy import select
 
 from app.db.connection import async_session, engine, Base
-from app.models.vlog import Country
+from app.models.v1.vlog import Country
 
 
 # countries.json should have same root as seed_countries.py

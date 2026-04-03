@@ -1,7 +1,7 @@
 from fastapi import status
 from sqlalchemy import select
 
-from app.models.vlog import Vlog
+from app.models.v1.vlog import Vlog
 
 
 # Endpoint GET /api/v1/vlogs/countries/

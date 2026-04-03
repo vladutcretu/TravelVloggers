@@ -1,7 +1,7 @@
-from app.repositories.vlogs import VlogsRepository
-from app.models.vlog import Country, Vlog
-from app.schemas.vlog import VlogCreate, VlogUpdate
-from app.clients.youtube import YoutubeClient
+from app.repositories.v1.vlogs import VlogsRepository
+from app.models.v1.vlog import Country, Vlog
+from app.schemas.v1.vlog import VlogCreate, VlogUpdate
+from app.clients.v1.youtube import YoutubeClient
 from app.core.exceptions import (
     VideoIdAlreadyExistsError,
     VloggerDoesntExistError,

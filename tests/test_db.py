@@ -1,6 +1,6 @@
 from fastapi import status
 
-from app.models.user import User
+from app.models.v1.user import User
 from sqlalchemy import select
 
 

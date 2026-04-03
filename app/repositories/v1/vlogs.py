@@ -3,8 +3,8 @@ from sqlalchemy import select, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
-from app.models.vlog import Country, Vlog
-from app.models.vlogger import Vlogger
+from app.models.v1.vlog import Country, Vlog
+from app.models.v1.vlogger import Vlogger
 from app.core.exceptions import VideoIdAlreadyExistsError
 
 

@@ -1,7 +1,7 @@
 from fastapi import status
 from sqlalchemy import select
 
-from app.models.vlogger import Vlogger
+from app.models.v1.vlogger import Vlogger
 
 
 # Endpoint POST /api/v1/vloggers

@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from pydantic import BaseModel, Field, ConfigDict
-from app.schemas.vlog import VlogResponsePaginated
+from app.schemas.v1.vlog import VlogResponsePaginated
 
 
 class VloggerBase(BaseModel):

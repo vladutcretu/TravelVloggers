@@ -1,7 +1,7 @@
 from datetime import timedelta
 
-from app.repositories.auth import AuthRepository, EmailAlreadyExistsError
-from app.models.user import User
+from app.repositories.v1.auth import AuthRepository, EmailAlreadyExistsError
+from app.models.v1.user import User
 from app.core.security import (
     hash_password,
     verify_password,
