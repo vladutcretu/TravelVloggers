@@ -28,7 +28,7 @@ For v1.0.0 (fully developed) the main technical objectives were:
 - Integrate YouTube Data API v3 to fetch video metadata such as title, thumbnail, publish date, language.
 - Import countries/cities from a reliable external dataset (e.g. GeoNames) to populate database.
 
-For v2.0.0 (currently unplanned) the main technical objectives are:
+For v2.0.0 (currently planned and under development) the main technical objectives are:
 - Integrate YouTube OAuth to let visitors make their own profiles on the platform.
 - Integrate a payment system that allows users to upgrade their account to submit their own vlogs.
 
