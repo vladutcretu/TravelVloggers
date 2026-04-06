@@ -36,3 +36,7 @@ class YoutubeDataNotFoundError(Exception):
 
 class VlogDoesntExistError(Exception):
     pass
+
+
+class GoogleIdAlreadyExistsError(Exception):
+    pass

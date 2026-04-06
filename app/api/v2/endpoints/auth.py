@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
-from app.schemas.v2.user import UserAuthResponse, UserAuthRequest
+from app.schemas.v2.user import UserAuthResponse, UserAuthRequest, UserResponse
+from app.schemas.v2.vlogger import VloggerResponse
 from app.api.dependencies import DatabaseSession
 from app.repositories.v2.auth import AuthRepository
 from app.services.v2.auth import AuthService
@@ -15,7 +16,9 @@ async def register_or_login_with_google(payload: UserAuthRequest, db: DatabaseSe
     service = AuthService(AuthRepository(db))
 
     try:
-        user, vlogger = await service.login_with_google(payload.google_id_token)
+        user, vlogger = await service.login_with_google(
+            payload.google_id_token
+        )
     except UserDoesntExistError:
         user, vlogger = await service.register_with_google(
             payload.google_id_token, payload.access_token
@@ -24,5 +27,8 @@ async def register_or_login_with_google(payload: UserAuthRequest, db: DatabaseSe
     access_token = await service.create_access_token(user.id)
 
     return UserAuthResponse(
-        access_token=access_token, token_type="bearer", user=user, vlogger=vlogger
+        access_token=access_token, 
+        token_type="bearer",
+        user=UserResponse.model_validate(user),
+        vlogger=VloggerResponse.model_validate(vlogger) if vlogger else None
     )

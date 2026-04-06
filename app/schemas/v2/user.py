@@ -21,4 +21,4 @@ class UserAuthResponse(BaseModel):
     access_token: str
     token_type: str
     user: UserResponse
-    vlogger: VloggerResponse
+    vlogger: VloggerResponse | None
