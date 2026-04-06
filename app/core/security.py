@@ -2,8 +2,12 @@ from datetime import timedelta, datetime, UTC
 
 from pwdlib import PasswordHash
 import jwt
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
 from app.core.config import settings
+from app.schemas.v2.user import UserBase
+from app.core.exceptions import GoogleInvalidTokenError, GoogleIncompleteTokenError
 
 
 password_hasher = PasswordHash.recommended()
@@ -64,3 +68,33 @@ def verify_access_token(token: str) -> int | None:
             return None
 
         return int(sub)
+
+
+def decode_google_token(google_id_token: str) -> UserBase:
+    """
+    Decodes Google ID Token (JWT) and validates it using Google's public keys if needed.
+    Returns email, google_id, full_name.
+    """
+    try:
+        id_info = id_token.verify_oauth2_token(
+            google_id_token,
+            requests.Request(),
+            audience=settings.GOOGLE_APP_CLIENT_ID,
+        )
+    except ValueError:
+        raise GoogleInvalidTokenError("Google ID token is invalid or expired.")
+
+    email = id_info.get("email")
+    google_id = id_info.get("sub")
+    full_name = id_info.get("name")
+
+    if not all([email, google_id, full_name]):
+        raise GoogleIncompleteTokenError(
+            "Google token payload is missing required fields."
+        )
+
+    return UserBase(
+        email=str(email),
+        google_id=str(google_id),
+        full_name=str(full_name),
+    )

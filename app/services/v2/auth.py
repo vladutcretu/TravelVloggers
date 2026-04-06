@@ -1,5 +1,7 @@
 from datetime import timedelta
 
+from fastapi import HTTPException, status
+
 from app.repositories.v2.auth import AuthRepository
 from app.models.user import User
 from app.models.vlogger import Vlogger
@@ -9,6 +11,8 @@ from app.core.exceptions import (
     GoogleIdAlreadyExistsError,
     EmailAlreadyExistsError,
     YoutubeDataNotFoundError,
+    GoogleInvalidTokenError,
+    GoogleIncompleteTokenError,
 )
 from app.clients.youtube import YoutubeClient
 from app.core.config import settings
@@ -21,9 +25,10 @@ class AuthService:
     async def login_with_google(
         self, google_id_token: str
     ) -> tuple[User, Vlogger | None]:
-        user_data = decode_google_token(
-            google_id_token
-        )  # return google_id, email, full_name
+        try:
+            user_data = decode_google_token(google_id_token)
+        except (GoogleInvalidTokenError, GoogleIncompleteTokenError) as e:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
         user = await self.repository.login_with_google(user_data.google_id)
         if not user:
@@ -36,10 +41,11 @@ class AuthService:
     async def register_with_google(
         self, google_id_token: str, access_token: str
     ) -> tuple[User, Vlogger]:
-        user_data = decode_google_token(
-            google_id_token
-        )  # return google_id, email, full_name
-
+        try:
+            user_data = decode_google_token(google_id_token)
+        except (GoogleInvalidTokenError, GoogleIncompleteTokenError) as e:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+        
         # Validate data
         existing_user = await self.repository.get_user_by_google_id(user_data.google_id)
         if existing_user:

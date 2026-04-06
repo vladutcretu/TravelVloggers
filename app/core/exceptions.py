@@ -44,3 +44,15 @@ class GoogleIdAlreadyExistsError(Exception):
 
 class UserAlreadyExistsError(Exception):
     pass
+
+
+class GoogleInvalidTokenError(Exception):
+    """Raised when Google ID token is invalid or signature verification fails."""
+
+    pass
+
+
+class GoogleIncompleteTokenError(Exception):
+    """Raised when required fields are missing in Google token payload."""
+
+    pass

@@ -30,5 +30,7 @@ class Settings(BaseSettings):
 
     YOUTUBE_APP_API_KEY: str | None = None
 
+    GOOGLE_APP_CLIENT_ID: str | None = None
+
 
 settings = Settings()  # type: ignore[call-arg]

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 from app.schemas.v2.vlogger import VloggerResponse
 
@@ -8,13 +8,16 @@ class UserAuthRequest(BaseModel):
     access_token: str
 
 
-class UserResponse(BaseModel):
+class UserBase(BaseModel):
+    email: EmailStr
+    google_id: str = Field(max_length=255)
+    full_name: str = Field(max_length=255)
+
+
+class UserResponse(UserBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    email: EmailStr
-    google_id: str
-    full_name: str
 
 
 class UserAuthResponse(BaseModel):
