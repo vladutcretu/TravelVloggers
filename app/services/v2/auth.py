@@ -52,12 +52,8 @@ class AuthService:
         # Fetch YouTube API for Vlogger data
         try:
             youtube_client = YoutubeClient()
-            channel_data = await youtube_client.get_channel_data(
-                access_token
-            )  # youtube_channel_name, youtube_avatar_url, youtube_subscribers_count
-            uploads_id = await youtube_client.get_uploads_id(
-                channel_data.youtube_channel_id
-            )  # youtube_uploads_id
+            channel_data = await youtube_client.get_channel_data(access_token)
+            uploads_id = await youtube_client.get_uploads_id(channel_data.youtube_channel_id)
         except YoutubeDataNotFoundError:
             raise YoutubeDataNotFoundError()
 
@@ -88,7 +84,7 @@ class AuthService:
             youtube_channel_url=channel_data.youtube_channel_url,
             youtube_avatar_url=channel_data.youtube_avatar_url,
             youtube_subscribers_count=channel_data.youtube_subscribers_count,
-            youtube_uploads_id=uploads_id,
+            youtube_uploads_id=str(uploads_id),
         )
 
         return user, vlogger
