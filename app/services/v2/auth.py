@@ -18,14 +18,14 @@ class AuthService:
     def __init__(self, repository: AuthRepository):
         self.repository = repository
 
-    async def login_with_google(self, google_id_token: str) -> tuple[User, Vlogger]:
+    async def login_with_google(
+        self, google_id_token: str
+    ) -> tuple[User, Vlogger | None]:
         user_data = decode_google_token(
             google_id_token
         )  # return google_id, email, full_name
 
-        user = await self.repository.login_with_google(
-            user_data.google_id
-        )  # return User or None
+        user = await self.repository.login_with_google(user_data.google_id)
         if not user:
             raise UserDoesntExistError()
 
@@ -64,7 +64,7 @@ class AuthService:
         # Create User and Vlogger
         user = await self.repository.register_with_google(
             user_data.google_id, user_data.email, user_data.full_name
-        )  # return User
+        )
 
         # Check if Vlogger exists by unique fields
         existing_vlogger = await self.repository.get_vlogger_by_any_unique_fields(
@@ -76,7 +76,7 @@ class AuthService:
         if existing_vlogger:
             if existing_vlogger.user_id is None:
                 vlogger = await self.repository.update_vlogger(
-                    existing_vlogger.id, user_id=user.id
+                    vlogger_id=existing_vlogger.id, user_id=user.id
                 )
             else:
                 vlogger = existing_vlogger
@@ -89,7 +89,7 @@ class AuthService:
             youtube_avatar_url=channel_data.youtube_avatar_url,
             youtube_subscribers_count=channel_data.youtube_subscribers_count,
             youtube_uploads_id=uploads_id,
-        )  # return Vlogger
+        )
 
         return user, vlogger
 

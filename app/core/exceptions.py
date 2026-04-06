@@ -40,3 +40,7 @@ class VlogDoesntExistError(Exception):
 
 class GoogleIdAlreadyExistsError(Exception):
     pass
+
+
+class UserAlreadyExistsError(Exception):
+    pass
