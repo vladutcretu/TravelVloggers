@@ -2,6 +2,7 @@ import pytest
 from httpx import AsyncClient, ASGITransport
 
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+from fastapi import HTTPException, status
 
 from app.core.config import settings
 from app.db.connection import Base, get_db
@@ -312,3 +313,44 @@ async def vlogs_factory(db_session, vloggers_factory, countries_factory):
         return vlogs_list
 
     return _create_vlogs
+
+
+@pytest.fixture()
+async def mock_google_token(monkeypatch):
+    class UserData:
+        def __init__(self):
+            self.email = "test@gmail.com"
+            self.google_id = "1234567890"
+            self.full_name = "Tester"
+
+    def fake_decode(token):
+        if not token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Google ID token is invalid or expired.",
+            )
+        return UserData()
+
+    monkeypatch.setattr("app.services.v2.auth.decode_google_token", fake_decode)
+
+
+@pytest.fixture()
+async def mock_youtube_client(monkeypatch):
+    class FakeYoutubeClient:
+        async def get_channel_data(self, access_token):
+            return type(
+                "ChannelData",
+                (),
+                {
+                    "youtube_channel_id": "test_channel_id",
+                    "youtube_channel_name": "test_channel_name",
+                    "youtube_channel_url": "test_channel_url",
+                    "youtube_avatar_url": "test_avatar_url",
+                    "youtube_subscribers_count": 100,
+                },
+            )()
+
+        async def get_uploads_id(self, channel_id):
+            return type("Uploads", (), {"youtube_uploads_id": "test_uploads_id"})()
+
+    monkeypatch.setattr("app.services.v2.auth.YoutubeClient", FakeYoutubeClient)
