@@ -15,7 +15,7 @@ class VloggerYoutubeUploadsId(BaseModel):
     youtube_uploads_id: str = Field(max_length=50)
 
 
-class VloggerBase(VloggerYoutubeData, VloggerYoutubeUploadsId):
+class VloggerBase(VloggerYoutubeUploadsId, VloggerYoutubeData):
     pass
 
 

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, HTTPException
 
-from app.schemas.user import (
+from app.schemas.v1.user import (
     UserCreateResponse,
     UserCreate,
     UserLogin,
@@ -8,8 +8,8 @@ from app.schemas.user import (
     UserPrivateResponse,
 )
 from app.api.dependencies import DatabaseSession, CurrentUser
-from app.repositories.auth import AuthRepository, EmailAlreadyExistsError
-from app.services.auth import (
+from app.repositories.v1.auth import AuthRepository, EmailAlreadyExistsError
+from app.services.v1.auth import (
     AuthService,
     EmailOrPasswordIncorrectError,
 )

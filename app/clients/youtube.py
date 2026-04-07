@@ -124,6 +124,8 @@ class YoutubeClient:
             async with session.get(
                 url=f"{self.base_url}/channels", headers=headers, params=params
             ) as response:
+                data = await response.json()
+                print("YouTube response:", data)  # debug
                 if response.status != status.HTTP_200_OK:
                     raise YoutubeDataNotFoundError(
                         "Youtube channel data cant be retrieved."

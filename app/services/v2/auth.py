@@ -90,7 +90,7 @@ class AuthService:
             youtube_channel_url=channel_data.youtube_channel_url,
             youtube_avatar_url=channel_data.youtube_avatar_url,
             youtube_subscribers_count=channel_data.youtube_subscribers_count,
-            youtube_uploads_id=str(uploads_id),
+            youtube_uploads_id=uploads_id.youtube_uploads_id,
         )
 
         return user, vlogger
