@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 from app.schemas.v2.vlogger import VloggerResponse
@@ -18,6 +20,20 @@ class UserResponse(UserBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+
+
+class UserPrivateResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    email: EmailStr
+    full_name: str | None = None
+    is_admin: bool
+    is_superuser: bool
+    stripe_customer_id: str | None = None
+    stripe_subscription_id: str | None = None
+    membership_expires_at: datetime | None = None
+    has_membership_active: bool
 
 
 class UserAuthResponse(BaseModel):

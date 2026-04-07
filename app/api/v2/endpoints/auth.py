@@ -1,8 +1,13 @@
 from fastapi import APIRouter, HTTPException, status
 
-from app.schemas.v2.user import UserAuthResponse, UserAuthRequest, UserResponse
+from app.schemas.v2.user import (
+    UserAuthResponse,
+    UserAuthRequest,
+    UserResponse,
+    UserPrivateResponse,
+)
 from app.schemas.v2.vlogger import VloggerResponse
-from app.api.dependencies import DatabaseSession
+from app.api.dependencies import DatabaseSession, CurrentUser
 from app.repositories.v2.auth import AuthRepository
 from app.services.v2.auth import AuthService
 from app.core.exceptions import (
@@ -15,7 +20,9 @@ from app.core.exceptions import (
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
 
-@router.post("/with-google", response_model=UserAuthResponse)
+@router.post(
+    "/with-google", response_model=UserAuthResponse, status_code=status.HTTP_200_OK
+)
 async def register_or_login_with_google(payload: UserAuthRequest, db: DatabaseSession):
     service = AuthService(AuthRepository(db))
 
@@ -40,3 +47,8 @@ async def register_or_login_with_google(payload: UserAuthRequest, db: DatabaseSe
         user=UserResponse.model_validate(user),
         vlogger=VloggerResponse.model_validate(vlogger) if vlogger else None,
     )
+
+
+@router.get("/me", response_model=UserPrivateResponse, status_code=status.HTTP_200_OK)
+async def get_me(current_user: CurrentUser):
+    return current_user
