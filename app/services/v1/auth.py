@@ -1,6 +1,6 @@
 from datetime import timedelta
 
-from app.repositories.auth import AuthRepository, EmailAlreadyExistsError
+from app.repositories.v1.auth import AuthRepository, EmailAlreadyExistsError
 from app.models.user import User
 from app.core.security import (
     hash_password,
@@ -37,7 +37,7 @@ class AuthService:
         email = email.lower()
 
         existing_user = await self.repository.get_user_by_email(email)
-        if existing_user is None:
+        if existing_user is None or existing_user.password_hash is None:
             raise EmailOrPasswordIncorrectError()
 
         verified_password = verify_password(password, existing_user.password_hash)

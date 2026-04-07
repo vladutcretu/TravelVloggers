@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, HTTPException
 
-from app.schemas.user import UserPublicResponse, UserUpdate
+from app.schemas.v1.user import UserPublicResponse, UserUpdate
 from app.api.dependencies import CurrentUser, DatabaseSession
 from app.repositories.users import UsersRepository
 from app.services.users import UsersService, UserDoesntExistError

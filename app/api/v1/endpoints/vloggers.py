@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, HTTPException
 
-from app.schemas.vlogger import (
+from app.schemas.v1.vlogger import (
     VloggerResponse,
     VloggerCreate,
     VloggerUpdate,
