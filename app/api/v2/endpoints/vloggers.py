@@ -1,7 +1,8 @@
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, status, HTTPException, Request
 
 from app.schemas.v2.vlog import VlogYouTubeUploads
 from app.api.dependencies import CurrentUser, DatabaseSession
+from app.clients.redis import YouTubeUploadsCache
 from app.repositories.v2.vloggers import VloggersRepository
 from app.services.v2.vloggers import VloggersService
 from app.core.exceptions import (
@@ -18,14 +19,15 @@ router = APIRouter(prefix="/vloggers", tags=["Vloggers"])
     response_model=VlogYouTubeUploads,
     status_code=status.HTTP_200_OK,
 )
-async def get_youtube_uploads(current_user: CurrentUser, db: DatabaseSession):
+async def get_youtube_uploads(current_user: CurrentUser, db: DatabaseSession, request: Request):
     if not current_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
         )
 
     repository = VloggersRepository(db)
-    service = VloggersService(repository)
+    cache = YouTubeUploadsCache(request.app.state.redis)
+    service = VloggersService(repository, cache)
 
     try:
         youtube_uploads = await service.get_youtube_uploads(current_user.id)
