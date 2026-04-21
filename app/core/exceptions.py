@@ -56,3 +56,11 @@ class GoogleIncompleteTokenError(Exception):
     """Raised when required fields are missing in Google token payload."""
 
     pass
+
+
+class VloggerUploadsError(Exception):
+    pass
+
+
+class RateLimitError(Exception):
+    pass

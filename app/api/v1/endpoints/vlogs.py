@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, Query, HTTPException
 
-from app.schemas.vlog import (
+from app.schemas.v1.vlog import (
     CountryResponsePaginated,
     CountryResponse,
     VlogResponse,
