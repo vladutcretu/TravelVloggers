@@ -7,7 +7,7 @@ from app.schemas.v1.vlogger import (
     VloggerResponsePaginated,
     VloggerVlogsResponsePaginated,
 )
-from app.schemas.vlog import VlogResponse
+from app.schemas.v1.vlog import VlogResponse
 from app.api.dependencies import CurrentUser, DatabaseSession, PaginationParams
 from app.repositories.vloggers import VloggersRepository, VloggerAlreadyExistsError
 from app.services.vloggers import VloggersService, VloggerDoesntExistError

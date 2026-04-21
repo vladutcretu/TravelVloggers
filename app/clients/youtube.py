@@ -3,7 +3,7 @@ from datetime import datetime
 import aiohttp
 from fastapi import status
 
-from app.schemas.vlog import VlogYouTubeVideoData
+from app.schemas.v1.vlog import VlogYouTubeVideoData
 from app.schemas.v2.vlogger import VloggerYoutubeData, VloggerYoutubeUploadsId
 from app.core.config import settings
 from app.core.exceptions import YoutubeDataNotFoundError
