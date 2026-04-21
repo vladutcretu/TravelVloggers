@@ -5,6 +5,7 @@ from fastapi import status
 
 from app.schemas.v1.vlog import VlogYouTubeVideoData
 from app.schemas.v2.vlogger import VloggerYoutubeData, VloggerYoutubeUploadsId
+from app.schemas.v2.vlog import VlogYouTubeUploadData, VlogYouTubeUploads
 from app.core.config import settings
 from app.core.exceptions import YoutubeDataNotFoundError
 
@@ -72,6 +73,7 @@ class YoutubeClient:
             )
 
         snippet = items[0]["snippet"]
+
         return VlogYouTubeVideoData(
             published_at=datetime.fromisoformat(
                 snippet["publishedAt"].replace("Z", "+00:00")  # "datetime" -> datetime
@@ -188,4 +190,85 @@ class YoutubeClient:
 
         return VloggerYoutubeUploadsId(
             youtube_uploads_id=items[0]["contentDetails"]["relatedPlaylists"]["uploads"]
+        )
+
+    async def get_uploaded_videos(self, uploads_id: str) -> VlogYouTubeUploads:
+        """
+        Fetch uploads playlist for the given channel to retrieve videos.
+        Expected API response:
+        {
+            "nextPageToken": "string",
+            "prevPageToken": "string"
+            "items": [
+                {
+                "snippet": {
+                    "publishedAt": "string",
+                    "title": "string",
+                    "thumbnails": {
+                    "default": {
+                        "url": "string",
+                    },
+                    "resourceId": {
+                        "videoId": "string"
+                    },
+                },
+            ],
+            "pageInfo": {
+                "totalResults": int,
+                "resultsPerPage": int
+            }
+        }
+        Returns mapped data (not used in any model until user's choose):
+            - next_page_token
+            - prev_page_token
+            - total_results
+            - results_per_page
+            - published_at
+            - title
+            - thumbnail_url
+            - video_id
+        """
+        params = {
+            "key": self.api_key,
+            "part": "snippet",
+            "playlistId": f"{uploads_id}",
+            "maxResults": settings.responses_per_page,
+        }
+
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                url=f"{self.base_url}/playlistItems", params=params
+            ) as response:
+                if response.status != status.HTTP_200_OK:
+                    raise YoutubeDataNotFoundError(
+                        "Youtube Uploaded videos cannot be retrieved."
+                    )
+                data = await response.json()
+
+        items = data.get("items", [])
+        if not items:
+            raise YoutubeDataNotFoundError("No uploaded videos found")
+
+        found_videos = []
+
+        for item in items:
+            snippet = item.get("snippet", {})
+
+            found_videos.append(
+                VlogYouTubeUploadData(
+                    video_id=snippet["resourceId"]["videoId"],
+                    published_at=datetime.fromisoformat(
+                        snippet["publishedAt"].replace("Z", "+00:00")
+                    ),
+                    title=snippet["title"],
+                    thumbnail_url=snippet["thumbnails"]["medium"]["url"],
+                )
+            )
+
+        return VlogYouTubeUploads(
+            next_page_token=data.get("nextPageToken", None),
+            prev_page_token=data.get("prevPageToken", None),
+            total_results=data["pageInfo"]["totalResults"],
+            results_per_page=data["pageInfo"]["resultsPerPage"],
+            uploads=found_videos,
         )

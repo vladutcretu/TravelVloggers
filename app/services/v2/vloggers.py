@@ -1,4 +1,5 @@
 from app.repositories.v2.vloggers import VloggersRepository
+from app.schemas.v2.vlog import VlogYouTubeUploads
 from app.core.exceptions import (
     VloggerDoesntExistError,
     VloggerUploadsError,
@@ -11,7 +12,7 @@ class VloggersService:
     def __init__(self, repository: VloggersRepository):
         self.repository = repository
 
-    async def get_youtube_uploads(self, user_id: int):
+    async def get_youtube_uploads(self, user_id: int) -> VlogYouTubeUploads:
         vlogger = await self.repository.get_vlogger_by_user_id(user_id)
 
         if not vlogger:
@@ -21,10 +22,11 @@ class VloggersService:
             raise VloggerUploadsError()
 
         try:
-            youtube_videos = await YoutubeClient.get_uploaded_videos(
+            youtube_client = YoutubeClient()
+            youtube_uploads = await youtube_client.get_uploaded_videos(
                 vlogger.youtube_uploads_id
             )
-        except YoutubeDataNotFoundError:
-            raise YoutubeDataNotFoundError
+        except YoutubeDataNotFoundError as e:
+            raise e
 
-        return youtube_videos
+        return youtube_uploads
