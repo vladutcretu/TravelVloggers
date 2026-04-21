@@ -60,3 +60,7 @@ class GoogleIncompleteTokenError(Exception):
 
 class VloggerUploadsError(Exception):
     pass
+
+
+class RateLimitError(Exception):
+    pass

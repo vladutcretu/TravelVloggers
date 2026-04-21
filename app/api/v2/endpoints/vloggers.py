@@ -9,6 +9,7 @@ from app.core.exceptions import (
     VloggerDoesntExistError,
     VloggerUploadsError,
     YoutubeDataNotFoundError,
+    RateLimitError,
 )
 
 router = APIRouter(prefix="/vloggers", tags=["Vloggers"])
@@ -19,7 +20,9 @@ router = APIRouter(prefix="/vloggers", tags=["Vloggers"])
     response_model=VlogYouTubeUploads,
     status_code=status.HTTP_200_OK,
 )
-async def get_youtube_uploads(current_user: CurrentUser, db: DatabaseSession, request: Request):
+async def get_youtube_uploads(
+    current_user: CurrentUser, db: DatabaseSession, request: Request
+):
     if not current_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
@@ -31,18 +34,51 @@ async def get_youtube_uploads(current_user: CurrentUser, db: DatabaseSession, re
 
     try:
         youtube_uploads = await service.get_youtube_uploads(current_user.id)
-    
+
     except VloggerDoesntExistError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Vlogger not found"
         )
-    
+
     except VloggerUploadsError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Vlogger does not have uploads ID",
         )
-    
+
+    except YoutubeDataNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="No Youtube Uploads found"
+        )
+
+    return youtube_uploads
+
+
+@router.post(
+    "/youtube-uploads",
+    response_model=VlogYouTubeUploads,
+    status_code=status.HTTP_200_OK,
+)
+async def update_youtube_uploads(
+    current_user: CurrentUser, db: DatabaseSession, request: Request
+):
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+        )
+
+    repository = VloggersRepository(db)
+    cache = YouTubeUploadsCache(request.app.state.redis)
+    service = VloggersService(repository, cache)
+
+    try:
+        youtube_uploads = await service.update_youtube_uploads(current_user.id)
+
+    except RateLimitError:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limit exceeded"
+        )
+
     except YoutubeDataNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="No Youtube Uploads found"
