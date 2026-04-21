@@ -15,4 +15,4 @@ class VlogYouTubeUploads(BaseModel):
     prev_page_token: str | None = None
     total_results: int
     results_per_page: int
-    items: list[VlogYouTubeUploadData]
+    uploads: list[VlogYouTubeUploadData]
