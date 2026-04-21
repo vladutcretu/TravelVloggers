@@ -32,5 +32,9 @@ class Settings(BaseSettings):
 
     GOOGLE_APP_CLIENT_ID: str | None = None
 
+    REDIS_HOST: str = "redis"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+
 
 settings = Settings()  # type: ignore[call-arg]
