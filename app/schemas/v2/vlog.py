@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class VlogYouTubeUploadData(BaseModel):
@@ -16,3 +16,28 @@ class VlogYouTubeUploads(BaseModel):
     total_results: int
     results_per_page: int
     uploads: list[VlogYouTubeUploadData]
+
+
+class VlogBase(BaseModel):
+    vlogger_id: int
+    country_id: int
+    youtube_video_id: str = Field(min_length=11, max_length=11)
+
+
+class VlogCreate(VlogBase):
+    pass
+
+
+class VlogYouTubeVideoData(BaseModel):
+    published_at: datetime
+    title: str
+    thumbnail_url: str
+    language: str | None = None
+
+
+class VlogResponse(VlogBase, VlogYouTubeVideoData):
+    model_config = ConfigDict(from_attributes=True)
+
+    youtube_video_url: str
+    id: int
+    created_at: datetime

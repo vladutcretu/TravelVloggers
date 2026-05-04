@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 import pytest
 from httpx import AsyncClient, ASGITransport
 
@@ -353,4 +355,45 @@ async def mock_youtube_client(monkeypatch):
         async def get_uploads_id(self, channel_id):
             return type("Uploads", (), {"youtube_uploads_id": "test_uploads_id"})()
 
+        async def get_video_data(self, youtube_video_id):
+            if youtube_video_id == "stringstrin":
+                return None
+
+            return type(
+                "VideoData",
+                (),
+                {
+                    "published_at": datetime(2020, 1, 1, 12, 0, 0, tzinfo=timezone.utc),
+                    "title": "Test Video",
+                    "thumbnail_url": "https://test.com/thumbnail.jpg",
+                    "language": "en",
+                },
+            )()
+
     monkeypatch.setattr("app.services.v2.auth.YoutubeClient", FakeYoutubeClient)
+    monkeypatch.setattr("app.services.v2.vlogs.YoutubeClient", FakeYoutubeClient)
+
+
+@pytest.fixture()
+async def user_with_vlogger(db_session):
+    user = User(email="user@mail.com", password_hash="123456")
+    db_session.add(user)
+    await db_session.commit()
+
+    vlogger = Vlogger(
+        youtube_channel_id="vlogger_channel_id",
+        youtube_channel_name="vlogger_channel_name",
+        youtube_channel_url="vlogger_channel_url",
+        youtube_avatar_url="vlogger_avatar_url",
+        user_id=user.id,
+    )
+    db_session.add(vlogger)
+    await db_session.commit()
+
+    return user, vlogger
+
+
+@pytest.fixture()
+async def vlogger_token(user_with_vlogger):
+    user, vlogger = user_with_vlogger
+    return create_access_token(data={"sub": str(user.id)})
