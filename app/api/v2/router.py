@@ -1,8 +1,9 @@
 from fastapi import APIRouter
 
-from app.api.v2.endpoints import auth, vloggers
+from app.api.v2.endpoints import auth, vloggers, vlogs
 
 
 router = APIRouter(prefix="/api/v2")
 router.include_router(auth.router)
 router.include_router(vloggers.router)
+router.include_router(vlogs.router)
