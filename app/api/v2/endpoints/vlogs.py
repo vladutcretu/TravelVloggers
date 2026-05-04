@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status, HTTPException
 
-from app.schemas.v2.vlog import VlogResponse, VlogCreate
+from app.schemas.v2.vlog import VlogResponse, VlogCreate, CountryData
 from app.api.dependencies import CurrentUser, DatabaseSession
 from app.repositories.v2.vlogs import VlogsRepository
 from app.services.v2.vlogs import VlogsService
@@ -63,3 +63,15 @@ async def create_vlog(
         )
 
     return vlog
+
+
+@router.get(
+    "/countries", response_model=list[CountryData], status_code=status.HTTP_200_OK
+)
+async def get_countries(db: DatabaseSession):
+    repository = VlogsRepository(db)
+    service = VlogsService(repository)
+
+    countries = await service.get_countries()
+
+    return countries

@@ -1,10 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, exists
 from sqlalchemy.exc import IntegrityError
 
 from app.models.vlog import Country, Vlog
 from app.models.vlogger import Vlogger
 from app.core.exceptions import VideoIdAlreadyExistsError
+from app.schemas.v2.vlog import CountryData
 
 
 class VlogsRepository:
@@ -56,3 +57,23 @@ class VlogsRepository:
         result = await self.db.execute(select(Vlog).where(Vlog.id == vlog_id))
         vlog = result.scalars().first()
         return vlog
+
+    async def get_countries_with_vlog_count(self) -> list[CountryData]:
+        result = await self.db.execute(
+            select(
+                Country.id,
+                Country.name,
+                Country.iso_code,
+                exists().where(Vlog.country_id == Country.id).label("has_vlog"),
+            )
+        )
+
+        return [
+            CountryData(
+                id=country.id,
+                name=country.name,
+                iso_code=country.iso_code,
+                has_vlog=country.has_vlog,
+            )
+            for country in result
+        ]

@@ -41,3 +41,12 @@ class VlogResponse(VlogBase, VlogYouTubeVideoData):
     youtube_video_url: str
     id: int
     created_at: datetime
+
+
+class CountryData(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
+    iso_code: str
+    has_vlog: bool
