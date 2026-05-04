@@ -1,4 +1,8 @@
+from datetime import datetime
+
 from fastapi import status
+
+from app.models.vlog import Vlog
 
 
 # Endpoint POST /api/v2/vlogs/
@@ -217,3 +221,63 @@ async def test_post_vlogs_endpoint_success(
     assert data["youtube_video_url"] == "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
     assert "id" in data
     assert "created_at" in data
+
+
+# Endpoint POST /api/v2/vlogs/countries
+async def test_get_countries_endpoint_all_false(
+    countries_factory,
+    client,
+):
+    countries = await countries_factory(instances=3)
+
+    response = await client.get("/api/v2/vlogs/countries")
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) == 3
+
+    for country_data, country in zip(data, countries):
+        assert country_data["id"] == country.id
+        assert country_data["name"] == country.name
+        assert country_data["iso_code"] == country.iso_code
+        assert country_data["has_vlog"] is False
+
+
+async def test_get_countries_endpoint_one_true(
+    vloggers_factory,
+    countries_factory,
+    db_session,
+    client,
+):
+    vloggers = await vloggers_factory(instances=1)
+    countries = await countries_factory(instances=3)
+
+    vlog = Vlog(
+        vlogger_id=vloggers[0].id,
+        country_id=countries[1].id,
+        youtube_video_id="dQw4w9WgXcQ",
+        published_at=datetime.now(),
+        title="Test Video",
+        thumbnail_url="https://test.com/thumbnail.jpg",
+    )
+    db_session.add(vlog)
+    await db_session.commit()
+
+    response = await client.get("/api/v2/vlogs/countries")
+
+    assert response.status_code == status.HTTP_200_OK
+
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) == 3
+
+    for country_data, country in zip(data, countries):
+        assert country_data["id"] == country.id
+        assert country_data["name"] == country.name
+        assert country_data["iso_code"] == country.iso_code
+        if country.id == countries[1].id:
+            assert country_data["has_vlog"] is True
+        else:
+            assert country_data["has_vlog"] is False

@@ -1,5 +1,5 @@
 from app.repositories.v2.vlogs import VlogsRepository
-from app.schemas.v2.vlog import VlogCreate
+from app.schemas.v2.vlog import VlogCreate, CountryData
 from app.models.vlog import Vlog
 from app.clients.youtube import YoutubeClient
 from app.core.exceptions import (
@@ -56,3 +56,6 @@ class VlogsService:
         if vlog is None:
             raise VlogDoesntExistError()
         return vlog
+
+    async def get_countries(self) -> list[CountryData]:
+        return await self.repository.get_countries_with_vlog_count()
