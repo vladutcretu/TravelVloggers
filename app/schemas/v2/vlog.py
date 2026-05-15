@@ -43,6 +43,13 @@ class VlogResponse(VlogBase, VlogYouTubeVideoData):
     created_at: datetime
 
 
+class VlogResponsePaginated(BaseModel):
+    vlogs: list[VlogResponse]
+    skip: int
+    limit: int
+    has_more: bool
+
+
 class CountryData(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

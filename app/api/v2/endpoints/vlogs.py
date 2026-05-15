@@ -1,7 +1,12 @@
 from fastapi import APIRouter, status, HTTPException
 
-from app.schemas.v2.vlog import VlogResponse, VlogCreate, CountryData
-from app.api.dependencies import CurrentUser, DatabaseSession
+from app.schemas.v2.vlog import (
+    VlogResponse,
+    VlogCreate,
+    CountryData,
+    VlogResponsePaginated,
+)
+from app.api.dependencies import CurrentUser, DatabaseSession, PaginationParams
 from app.repositories.v2.vlogs import VlogsRepository
 from app.services.v2.vlogs import VlogsService
 from app.core.exceptions import (
@@ -75,3 +80,41 @@ async def get_countries(db: DatabaseSession):
     countries = await service.get_countries()
 
     return countries
+
+
+@router.get(
+    "/country/{country_id}",
+    response_model=VlogResponsePaginated,
+    status_code=status.HTTP_200_OK,
+)
+async def get_vlogs_by_country(
+    country_id: int,
+    db: DatabaseSession,
+    pagination: PaginationParams,
+    language: str | None = None,
+    publish_year: int | None = None,
+):
+    repository = VlogsRepository(db)
+    service = VlogsService(repository)
+
+    try:
+        vlogs, has_more = await service.get_vlogs_by_country_id(
+            country_id,
+            pagination.skip,
+            pagination.limit,
+            pagination.order,
+            language,
+            publish_year,
+        )
+    except CountryDoesntExistError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Country does not exist",
+        )
+
+    return {
+        "vlogs": vlogs,
+        "skip": pagination.skip,
+        "limit": pagination.limit,
+        "has_more": has_more,
+    }

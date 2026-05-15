@@ -59,3 +59,22 @@ class VlogsService:
 
     async def get_countries(self) -> list[CountryData]:
         return await self.repository.get_countries_with_vlog_count()
+
+    async def get_vlogs_by_country_id(
+        self,
+        country_id: int,
+        skip: int,
+        limit: int,
+        order: str,
+        language: str | None = None,
+        publish_year: int | None = None,
+    ) -> tuple[list[Vlog], bool]:
+        existing_country = await self.repository.get_country_by_id(country_id)
+        if existing_country is None:
+            raise CountryDoesntExistError()
+
+        vlogs = await self.repository.get_vlogs_by_country_id(
+            country_id, skip, limit + 1, order, language, publish_year
+        )
+        has_more = len(vlogs) > limit
+        return vlogs[:limit], has_more

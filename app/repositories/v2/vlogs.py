@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, exists
+from sqlalchemy import select, exists, extract
 from sqlalchemy.exc import IntegrityError
 
 from app.models.vlog import Country, Vlog
@@ -77,3 +77,29 @@ class VlogsRepository:
             )
             for country in result
         ]
+
+    async def get_vlogs_by_country_id(
+        self,
+        country_id: int,
+        skip: int,
+        limit: int,
+        order: str,
+        language: str | None = None,
+        publish_year: int | None = None,
+    ) -> list[Vlog]:
+        query = select(Vlog).where(Vlog.country_id == country_id)
+
+        if language is not None:
+            query = query.where(Vlog.language == language)
+
+        if publish_year is not None:
+            query = query.where(extract("year", Vlog.published_at) == publish_year)
+
+        order_by = (
+            Vlog.published_at.asc() if order == "asc" else Vlog.published_at.desc()
+        )
+        query = query.order_by(order_by).offset(skip).limit(limit)
+
+        result = await self.db.execute(query)
+        vlogs = list(result.scalars().all())
+        return vlogs
