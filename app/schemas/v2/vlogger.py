@@ -29,3 +29,12 @@ class VloggerResponse(VloggerBase):
     id: int
     user_id: int
     created_at: datetime
+
+
+class VloggerPublicResponse(VloggerYoutubeData):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    vlogs_count: int
+    countries_count: int
+    created_at: datetime
