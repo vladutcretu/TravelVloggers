@@ -1,5 +1,6 @@
 from app.repositories.v2.vloggers import VloggersRepository
 from app.clients.redis import YouTubeUploadsCache
+from app.models.vlog import Vlog
 from app.schemas.v2.vlog import CountryData, VlogYouTubeUploads
 from app.schemas.v2.vlogger import VloggerPublicResponse
 from app.core.exceptions import (
@@ -8,6 +9,7 @@ from app.core.exceptions import (
     YoutubeDataNotFoundError,
     RateLimitError,
     UserDoesntExistError,
+    CountryDoesntExistError,
 )
 from app.clients.youtube import YoutubeClient
 
@@ -116,3 +118,33 @@ class VloggersService:
             raise VloggerDoesntExistError()
 
         return await self.repository.get_countries_by_vlogger_id(vlogger_id)
+
+    async def get_vlogs_by_vlogger_and_country_id(
+        self,
+        vlogger_id: int,
+        country_id: int,
+        skip: int,
+        limit: int,
+        order: str,
+        language: str | None = None,
+        publish_year: int | None = None,
+    ) -> tuple[list[Vlog], bool]:
+        vlogger = await self.repository.get_vlogger_by_id(vlogger_id)
+        if not vlogger:
+            raise VloggerDoesntExistError()
+
+        country = await self.repository.get_country_by_id(country_id)
+        if country is None:
+            raise CountryDoesntExistError()
+
+        vlogs = await self.repository.get_vlogs_by_vlogger_and_country_id(
+            vlogger_id,
+            country_id,
+            skip,
+            limit + 1,
+            order,
+            language,
+            publish_year,
+        )
+        has_more = len(vlogs) > limit
+        return vlogs[:limit], has_more

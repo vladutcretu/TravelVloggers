@@ -1,5 +1,5 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, distinct, exists
+from sqlalchemy import select, func, distinct, exists, extract
 
 from app.models.vlog import Country, Vlog
 from app.models.vlogger import Vlogger
@@ -68,3 +68,38 @@ class VloggersRepository:
             )
             for row in result
         ]
+
+    async def get_country_by_id(self, country_id: int) -> Country | None:
+        result = await self.db.execute(select(Country).where(Country.id == country_id))
+        country = result.scalars().first()
+        return country
+
+    async def get_vlogs_by_vlogger_and_country_id(
+        self,
+        vlogger_id: int,
+        country_id: int,
+        skip: int,
+        limit: int,
+        order: str,
+        language: str | None = None,
+        publish_year: int | None = None,
+    ) -> list[Vlog]:
+        query = select(Vlog).where(
+            Vlog.vlogger_id == vlogger_id,
+            Vlog.country_id == country_id,
+        )
+
+        if language is not None:
+            query = query.where(Vlog.language == language)
+
+        if publish_year is not None:
+            query = query.where(extract("year", Vlog.published_at) == publish_year)
+
+        order_by = (
+            Vlog.published_at.asc() if order == "asc" else Vlog.published_at.desc()
+        )
+        query = query.order_by(order_by).offset(skip).limit(limit)
+
+        result = await self.db.execute(query)
+        vlogs = list(result.scalars().all())
+        return vlogs
