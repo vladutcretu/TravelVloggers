@@ -2,6 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, ConfigDict
 
+from app.schemas.v2.vlog import CountryData
+
 
 class VloggerYoutubeData(BaseModel):
     youtube_channel_id: str = Field(max_length=255)
@@ -38,3 +40,7 @@ class VloggerPublicResponse(VloggerYoutubeData):
     vlogs_count: int
     countries_count: int
     created_at: datetime
+
+
+class VloggerCountriesResponse(BaseModel):
+    countries: list[CountryData]

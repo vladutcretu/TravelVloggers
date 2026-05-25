@@ -1,9 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, distinct
+from sqlalchemy import select, func, distinct, exists
 
-from app.models.vlog import Vlog
+from app.models.vlog import Country, Vlog
 from app.models.vlogger import Vlogger
 from app.models.user import User
+from app.schemas.v2.vlog import CountryData
 
 
 class VloggersRepository:
@@ -43,3 +44,27 @@ class VloggersRepository:
         countries_count = result_countries_count.scalar_one()
 
         return vlogs_count, countries_count
+
+    async def get_countries_by_vlogger_id(
+        self,
+        vlogger_id: int,
+    ) -> list[CountryData]:
+        query = select(
+            Country.id,
+            Country.name,
+            Country.iso_code,
+            exists()
+            .where(Vlog.country_id == Country.id, Vlog.vlogger_id == vlogger_id)
+            .label("has_vlog"),
+        ).order_by(Country.name)
+
+        result = await self.db.execute(query)
+        return [
+            CountryData(
+                id=row.id,
+                name=row.name,
+                iso_code=row.iso_code,
+                has_vlog=row.has_vlog,
+            )
+            for row in result
+        ]
