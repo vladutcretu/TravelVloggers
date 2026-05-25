@@ -1,6 +1,7 @@
 from fastapi import APIRouter, status, HTTPException, Request
 
 from app.schemas.v2.vlog import VlogYouTubeUploads
+from app.schemas.v2.vlogger import VloggerPublicResponse
 from app.api.dependencies import CurrentUser, DatabaseSession
 from app.clients.redis import YouTubeUploadsCache
 from app.repositories.v2.vloggers import VloggersRepository
@@ -85,3 +86,23 @@ async def update_youtube_uploads(
         )
 
     return youtube_uploads
+
+
+@router.get(
+    "/{vlogger_id}",
+    response_model=VloggerPublicResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def get_vlogger(vlogger_id: int, db: DatabaseSession):
+    repository = VloggersRepository(db)
+    service = VloggersService(repository)
+
+    try:
+        vlogger_data = await service.get_vlogger_by_id(vlogger_id)
+    except VloggerDoesntExistError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Vlogger does not exist",
+        )
+
+    return vlogger_data
