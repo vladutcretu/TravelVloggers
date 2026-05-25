@@ -1,14 +1,15 @@
 from fastapi import APIRouter, status, HTTPException, Request
 
-from app.schemas.v2.vlog import VlogYouTubeUploads
+from app.schemas.v2.vlog import VlogResponsePaginated, VlogResponse, VlogYouTubeUploads
 from app.schemas.v2.vlogger import VloggerPublicResponse, VloggerCountriesResponse
-from app.api.dependencies import CurrentUser, DatabaseSession
+from app.api.dependencies import CurrentUser, DatabaseSession, PaginationParams
 from app.clients.redis import YouTubeUploadsCache
 from app.repositories.v2.vloggers import VloggersRepository
 from app.services.v2.vloggers import VloggersService
 from app.core.exceptions import (
     VloggerDoesntExistError,
     VloggerUploadsError,
+    CountryDoesntExistError,
     YoutubeDataNotFoundError,
     RateLimitError,
 )
@@ -126,3 +127,48 @@ async def get_vlogger_countries(vlogger_id: int, db: DatabaseSession):
         )
 
     return VloggerCountriesResponse(countries=countries)
+
+
+@router.get(
+    "/{vlogger_id}/country/{country_id}",
+    response_model=VlogResponsePaginated,
+    status_code=status.HTTP_200_OK,
+)
+async def get_vlogger_vlogs_by_country(
+    vlogger_id: int,
+    country_id: int,
+    db: DatabaseSession,
+    pagination: PaginationParams,
+    language: str | None = None,
+    publish_year: int | None = None,
+):
+    repository = VloggersRepository(db)
+    service = VloggersService(repository)
+
+    try:
+        vlogs, has_more = await service.get_vlogs_by_vlogger_and_country_id(
+            vlogger_id,
+            country_id,
+            pagination.skip,
+            pagination.limit,
+            pagination.order,
+            language,
+            publish_year,
+        )
+    except VloggerDoesntExistError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Vlogger does not exist",
+        )
+    except CountryDoesntExistError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Country does not exist",
+        )
+
+    return VlogResponsePaginated(
+        vlogs=[VlogResponse.model_validate(vlog) for vlog in vlogs],
+        skip=pagination.skip,
+        limit=pagination.limit,
+        has_more=has_more,
+    )
