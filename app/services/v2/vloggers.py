@@ -1,6 +1,6 @@
 from app.repositories.v2.vloggers import VloggersRepository
 from app.clients.redis import YouTubeUploadsCache
-from app.schemas.v2.vlog import VlogYouTubeUploads
+from app.schemas.v2.vlog import CountryData, VlogYouTubeUploads
 from app.schemas.v2.vlogger import VloggerPublicResponse
 from app.core.exceptions import (
     VloggerDoesntExistError,
@@ -109,3 +109,10 @@ class VloggersService:
             countries_count=countries_count,
             created_at=vlogger.created_at,
         )
+
+    async def get_countries_by_vlogger_id(self, vlogger_id: int) -> list[CountryData]:
+        vlogger = await self.repository.get_vlogger_by_id(vlogger_id)
+        if not vlogger:
+            raise VloggerDoesntExistError()
+
+        return await self.repository.get_countries_by_vlogger_id(vlogger_id)
