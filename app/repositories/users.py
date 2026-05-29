@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
@@ -32,6 +34,24 @@ class UsersRepository:
         self, user: User, stripe_customer_id: str
     ) -> User:
         user.stripe_customer_id = stripe_customer_id
+        await self.db.commit()
+        await self.db.refresh(user)
+        return user
+
+    async def get_user_by_stripe_customer_id(
+        self, stripe_customer_id: str
+    ) -> User | None:
+        result = await self.db.execute(
+            select(User).where(User.stripe_customer_id == stripe_customer_id)
+        )
+        user = result.scalars().first()
+        return user
+
+    async def update_membership(
+        self, user: User, subscription_id: str, membership_expires_at: datetime
+    ) -> User:
+        user.stripe_subscription_id = subscription_id
+        user.membership_expires_at = membership_expires_at
         await self.db.commit()
         await self.db.refresh(user)
         return user

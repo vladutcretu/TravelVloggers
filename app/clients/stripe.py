@@ -7,14 +7,14 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
 class StripeClient:
-    async def create_customer(self, *, email: str, user_id: int) -> stripe.Customer:
+    def create_customer(self, *, email: str, user_id: int) -> stripe.Customer:
         customer = stripe.Customer.create(
             email=email,
             metadata={"user_id": str(user_id)},
         )
         return customer
 
-    async def create_membership_checkout(
+    def create_membership_checkout(
         self, *, customer_id: str
     ) -> stripe.checkout.Session:
         if settings.STRIPE_MEMBERSHIP_PRICE_ID is None:
@@ -33,3 +33,18 @@ class StripeClient:
             cancel_url="http://localhost/cancel",
         )
         return session
+
+    def construct_webhook_event(
+        self, *, payload: bytes, sig_header: str, secret: str
+    ) -> stripe.Event:
+        try:
+            event = stripe.Webhook.construct_event(
+                payload=payload, sig_header=sig_header, secret=secret
+            )
+            return event
+        except ValueError as e:
+            # Invalid payload
+            raise e
+        except stripe.SignatureVerificationError as e:
+            # Invalid signature
+            raise e
