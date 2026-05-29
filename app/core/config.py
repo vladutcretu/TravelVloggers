@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     REDIS_DB: int = 0
 
     STRIPE_SECRET_KEY: str | None = None
-    STRIPE_MEMBERSHIP_PRODUCT_ID: str | None = None
+    STRIPE_MEMBERSHIP_PRICE_ID: str | None = None
     STRIPE_WEBHOOK_SECRET: str | None = None
 
 
