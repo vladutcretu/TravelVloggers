@@ -27,3 +27,11 @@ class UsersRepository:
         await self.db.delete(user)
         await self.db.commit()
         return
+
+    async def update_stripe_customer_id(
+        self, user: User, stripe_customer_id: str
+    ) -> User:
+        user.stripe_customer_id = stripe_customer_id
+        await self.db.commit()
+        await self.db.refresh(user)
+        return user

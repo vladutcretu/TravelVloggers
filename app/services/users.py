@@ -1,7 +1,10 @@
+from datetime import datetime, timezone
+
 from app.repositories.users import UsersRepository
 from app.models.user import User
 from app.schemas.v1.user import UserUpdate
 from app.core.exceptions import UserDoesntExistError
+from app.clients.stripe import StripeClient
 
 
 class UsersService:
@@ -25,3 +28,34 @@ class UsersService:
 
     async def delete_user(self, user: User) -> None:
         return await self.repository.delete_user(user)
+
+    async def subscribe_membership(self, user: User):
+        stripe_client = StripeClient()
+
+        # check if user has already active membership
+        if user.membership_expires_at and user.membership_expires_at > datetime.now(
+            timezone.utc
+        ):
+            raise ValueError("User already has an active membership.")
+
+        # check if user has a stripe customer id
+        customer_id = user.stripe_customer_id
+        if customer_id is None:
+            # create customer in stripe and save customer id in db
+            customer = await stripe_client.create_customer(
+                email=user.email, user_id=user.id
+            )
+            updated_user = await self.repository.update_stripe_customer_id(
+                user, customer.id
+            )
+            customer_id = updated_user.stripe_customer_id
+
+        if customer_id is None:
+            raise ValueError("Failed to create Stripe customer for the user.")
+
+        # create checkout session
+        session = await stripe_client.create_membership_checkout(
+            customer_id=customer_id
+        )
+        # return checkout url
+        return session.url
