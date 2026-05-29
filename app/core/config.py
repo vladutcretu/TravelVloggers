@@ -36,5 +36,9 @@ class Settings(BaseSettings):
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
 
+    STRIPE_SECRET_KEY: str | None = None
+    STRIPE_MEMBERSHIP_PRODUCT_ID: str | None = None
+    STRIPE_WEBHOOK_SECRET: str | None = None
+
 
 settings = Settings()  # type: ignore[call-arg]
