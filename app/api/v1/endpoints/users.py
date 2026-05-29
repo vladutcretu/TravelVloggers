@@ -2,8 +2,8 @@ from fastapi import APIRouter, status, HTTPException
 
 from app.schemas.v1.user import UserPublicResponse, UserUpdate
 from app.api.dependencies import CurrentUser, DatabaseSession
-from app.repositories.users import UsersRepository
-from app.services.users import UsersService, UserDoesntExistError
+from app.repositories.v1.users import UsersRepository
+from app.services.v1.users import UsersService, UserDoesntExistError
 
 
 router = APIRouter(prefix="/users", tags=["Users"])

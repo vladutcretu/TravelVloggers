@@ -10,8 +10,8 @@ from app.schemas.v1.vlog import (
     CountryVlogsResponsePaginated,
 )
 from app.api.dependencies import DatabaseSession, PaginationParams, CurrentUser
-from app.repositories.vlogs import VlogsRepository
-from app.services.vlogs import VlogsService
+from app.repositories.v1.vlogs import VlogsRepository
+from app.services.v1.vlogs import VlogsService
 from app.clients.youtube import YoutubeClient
 from app.core.exceptions import (
     VideoIdAlreadyExistsError,

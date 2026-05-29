@@ -9,8 +9,8 @@ from app.schemas.v1.vlogger import (
 )
 from app.schemas.v1.vlog import VlogResponse
 from app.api.dependencies import CurrentUser, DatabaseSession, PaginationParams
-from app.repositories.vloggers import VloggersRepository, VloggerAlreadyExistsError
-from app.services.vloggers import VloggersService, VloggerDoesntExistError
+from app.repositories.v1.vloggers import VloggersRepository, VloggerAlreadyExistsError
+from app.services.v1.vloggers import VloggersService, VloggerDoesntExistError
 
 
 router = APIRouter(prefix="/vloggers", tags=["Vloggers"])

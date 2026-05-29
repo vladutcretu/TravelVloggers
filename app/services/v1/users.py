@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from app.repositories.users import UsersRepository
+from app.repositories.v1.users import UsersRepository
 from app.models.user import User
 from app.schemas.v1.user import UserUpdate
 from app.core.exceptions import UserDoesntExistError

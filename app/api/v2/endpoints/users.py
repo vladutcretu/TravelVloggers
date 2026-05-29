@@ -1,8 +1,8 @@
 from fastapi import APIRouter, status, HTTPException, Request, Header
 
 from app.api.dependencies import CurrentUser, DatabaseSession
-from app.repositories.users import UsersRepository
-from app.services.users import UsersService, UserDoesntExistError
+from app.repositories.v1.users import UsersRepository
+from app.services.v1.users import UsersService, UserDoesntExistError
 
 
 payments = APIRouter(prefix="/payments", tags=["User Payments"])

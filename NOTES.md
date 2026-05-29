@@ -666,7 +666,7 @@ Dashboard page
 
 Membership page
 
-- Private endpoint `POST /api/v2/users/membership-subscribe` initiates a Stripe checkout for a monthly subscription
+- Private endpoint `POST /api/v2/payments/membership-subscribe` initiates a Stripe checkout for a monthly subscription
 
 #### Database design
 ![Database design](https://i.imgur.com/chW30DK.png)

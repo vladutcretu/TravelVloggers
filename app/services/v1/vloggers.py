@@ -1,4 +1,4 @@
-from app.repositories.vloggers import VloggersRepository
+from app.repositories.v1.vloggers import VloggersRepository
 from app.schemas.v1.vlogger import VloggerCreate, VloggerUpdate
 from app.models.vlogger import Vlogger
 from app.models.vlog import Vlog
